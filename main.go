@@ -227,7 +227,7 @@ func main() {
           }
 
           viewInBrowser := exec.Command("xdg-open", p.Articles[num - 1].Url)
-          viewInBrowser.Run()
+          viewInBrowser.Start()
           doneWithInput = true
         } else {
           scr.Clear()
