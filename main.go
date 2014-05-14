@@ -3,7 +3,6 @@ package main
 import (
   "log"
   "github.com/PuerkitoBio/goquery"
-  "fmt"
   "code.google.com/p/goncurses"
   "net/http"
   "crypto/tls"
@@ -68,10 +67,9 @@ func main() {
       log.Fatal(e)
     }
 
+    rows := doc.Find(".subtext").ParentsFilteredUntil("tr", "tbody").Prev()
 
-    rows := doc.Find("tr").Eq(3).Find("tr")
-
-    nextHref, _ := rows.Last().Find("a").Attr("href")
+    nextHref, _ := doc.Find("td.title").Last().Find("a").Attr("href")
 
     if nextHref[0] == '/' {
       next = YCRoot + nextHref
@@ -80,24 +78,13 @@ func main() {
     }
 
     rows.Each(func(i int, row *goquery.Selection) {
-      if i % rowsPerArticle > 0 || (len(ars) % 30 == 0 && i != 0){ return }
-
       ar := Article{}
-      up := row.Find("td.title").First().Next()
 
-      if idSt, exists := up.Find("a").First().Attr("id"); exists {
-        if id, err := strconv.Atoi(strings.Split(idSt, "_")[1]); err == nil {
-          ar.Id = id
-        } else {
-          fmt.Println(idSt)
-          log.Fatal(err)
-        }
-      }
-
-      title := up.Next()
+      title := row.Find(".title").Eq(1)
       link := title.Find("a").First()
 
       ar.Title = link.Text()
+
       if url, exists := link.Attr("href"); exists {
         ar.Url = url
       }
@@ -110,25 +97,27 @@ func main() {
         if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
           ar.Points = pts
         } else {
-          fmt.Println(ar)
-          fmt.Println(row.Html())
           log.Fatal(err)
+        }
+
+        if idSt, exists := s.Attr("id"); exists {
+          if id, err := strconv.Atoi(strings.Split(idSt, "_")[1]); err == nil {
+            ar.Id = id
+          } else {
+            log.Fatal(err)
+          }
         }
       })
 
       ar.User = row.Find("td.subtext a:first-child").Text()
 
       ars = append(ars, &ar)
-
-      //scr.Print(ar)
-      //scr.Refresh()
-      //scr.GetChar()
     })
 
     scr.Clear()
 
     start := 30 * page
-    end := start + 30
+    end := len(ars)
 
     for i, ar := range ars[start:end] {
       scr.Printf("%d. (%d): %s\n", start + i + 1, ar.Points, ar.Title)
