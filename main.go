@@ -38,17 +38,24 @@ type Article struct {
   Created string `json:"created"`
 }
 
+var trans *http.Transport = &http.Transport{
+  TLSClientConfig : &tls.Config{InsecureSkipVerify: true},
+}
+
+var client *http.Client = &http.Client{Transport: trans}
+
+func (a *Article) GetComments() (comments []*Comment) {
+  comments = make([]*Comment, 0)
+
+  return;
+}
+
 func main() {
   if scr, e = goncurses.Init(); e != nil {
     log.Fatal(e)
   }
   defer goncurses.End()
 
-  trans := &http.Transport{
-    TLSClientConfig : &tls.Config{InsecureSkipVerify: true},
-  }
-
-  client := &http.Client{Transport: trans}
 
   next := YCRoot + "/news"
   exit := false
