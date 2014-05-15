@@ -3,6 +3,7 @@ package main
 import (
   "log"
   "github.com/PuerkitoBio/goquery"
+  "os/exec"
   "code.google.com/p/goncurses"
   "net/http"
   "crypto/tls"
@@ -171,7 +172,7 @@ func main() {
       scr.Printf("%d. (%d): %s\n", start + i + 1, ar.Points, ar.Title)
     }
 
-    scr.Print("\n\nPress n to continue or q to quit\n\n")
+    scr.Print("\n\nPress n to continue\nEnter a number and press c to view commnets\nor press q to quit\n\n")
     scr.Refresh()
 
     doneWithInput := false
@@ -193,11 +194,27 @@ func main() {
           scr.GetChar()
           doneWithInput = true
         }
+      case "v":
+        if num, err := strconv.Atoi(input); err == nil {
+          viewInBrowser := exec.Command("xdg-open", ars[num - 1].Url)
+          viewInBrowser.Run()
+          doneWithInput = true
+        } else {
+          scr.Clear()
+          scr.Print("\n\nPlease enter a number to view an article\n\n")
+          scr.Refresh()
+          doneWithInput = true
+        }
       case "q":
         doneWithInput = true
         exit = true
       case "n":
         page += 1
+        doneWithInput = true
+      case "p":
+        if page > 0 {
+          page -= 1
+        }
         doneWithInput = true
       default:
         input += chr
