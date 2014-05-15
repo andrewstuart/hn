@@ -183,7 +183,8 @@ func main() {
     doneWithInput := false
     input := ""
     for !doneWithInput {
-      chr := goncurses.KeyString(scr.GetChar())
+      c := scr.GetChar()
+      chr := goncurses.KeyString(c)
       switch chr {
       case "c":
         if num, err := strconv.Atoi(input); err == nil {
@@ -191,7 +192,7 @@ func main() {
           ars[num - 1].PrintComments()
           scr.Refresh()
           scr.GetChar()
-          page += 1
+          doneWithInput = true
         } else {
           scr.Clear()
           scr.Print("\n\nPlease enter a number to select a comment\n\n")
