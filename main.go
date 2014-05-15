@@ -92,81 +92,86 @@ func (a *Article) PrintComments() {
   }
 }
 
+var next string = YCRoot + "/news"
+var ars []*Article = make([]*Article, 0, 30)
+
+func getArticles() {
+  if resp, e = client.Get(next); e != nil {
+    log.Print(e)
+  }
+
+  if doc, e = goquery.NewDocumentFromResponse(resp); e != nil {
+    log.Fatal(e)
+  }
+
+  rows := doc.Find(".subtext").ParentsFilteredUntil("tr", "tbody").Prev()
+
+  nextHref, _ := doc.Find("td.title").Last().Find("a").Attr("href")
+
+  if nextHref[0] == '/' {
+    next = YCRoot + nextHref
+  } else {
+    next = YCRoot + "/" + nextHref
+  }
+
+  rows.Each(func(i int, row *goquery.Selection) {
+    ar := Article{}
+
+    title := row.Find(".title").Eq(1)
+    link := title.Find("a").First()
+
+    ar.Title = link.Text()
+
+    if url, exists := link.Attr("href"); exists {
+      ar.Url = url
+    }
+
+    ar.SiteLabel = title.Find("span.comhead").Text()
+
+    row = row.Next()
+
+    row.Find("span").Each(func (i int, s *goquery.Selection) {
+      if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
+        ar.Points = pts
+      } else {
+        log.Fatal(err)
+      }
+
+      if idSt, exists := s.Attr("id"); exists {
+        if id, err := strconv.Atoi(strings.Split(idSt, "_")[1]); err == nil {
+          ar.Id = id
+        } else {
+          log.Fatal(err)
+        }
+      }
+    })
+
+    ar.User = row.Find("td.subtext a").First().Text()
+
+    ars = append(ars, &ar)
+  })
+}
+
 func main() {
   if scr, e = goncurses.Init(); e != nil {
     log.Fatal(e)
   }
   defer goncurses.End()
 
-
-  next := YCRoot + "/news"
   exit := false
 
-  ars := make([]*Article, 0)
   page := 0
 
-
   for !exit {
-
-    if resp, e = client.Get(next); e != nil {
-      log.Print(e)
-    }
-
-    if doc, e = goquery.NewDocumentFromResponse(resp); e != nil {
-      log.Fatal(e)
-    }
-
-    rows := doc.Find(".subtext").ParentsFilteredUntil("tr", "tbody").Prev()
-
-    nextHref, _ := doc.Find("td.title").Last().Find("a").Attr("href")
-
-    if nextHref[0] == '/' {
-      next = YCRoot + nextHref
-    } else {
-      next = YCRoot + "/" + nextHref
-    }
-
-    rows.Each(func(i int, row *goquery.Selection) {
-      ar := Article{}
-
-      title := row.Find(".title").Eq(1)
-      link := title.Find("a").First()
-
-      ar.Title = link.Text()
-
-      if url, exists := link.Attr("href"); exists {
-        ar.Url = url
-      }
-
-      ar.SiteLabel = title.Find("span.comhead").Text()
-
-      row = row.Next()
-
-      row.Find("span").Each(func (i int, s *goquery.Selection) {
-        if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
-          ar.Points = pts
-        } else {
-          log.Fatal(err)
-        }
-
-        if idSt, exists := s.Attr("id"); exists {
-          if id, err := strconv.Atoi(strings.Split(idSt, "_")[1]); err == nil {
-            ar.Id = id
-          } else {
-            log.Fatal(err)
-          }
-        }
-      })
-
-      ar.User = row.Find("td.subtext a").First().Text()
-
-      ars = append(ars, &ar)
-    })
 
     scr.Clear()
 
     start := 30 * page
     end := start + 30
+
+    for end > len(ars) {
+      getArticles()
+    }
 
     for i, ar := range ars[start:end] {
       scr.Printf("%d. (%d): %s\n", start + i + 1, ar.Points, ar.Title)
