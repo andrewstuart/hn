@@ -31,6 +31,10 @@ type Comment struct {
   Children []*Comment `json:"children"`
 }
 
+func (c *Comment) String() string {
+  return fmt.Sprintf("%s: %s", c.User, c.Text)
+}
+
 //Article structure
 type Article struct {
   Title string `json:"title"xml:"`
@@ -77,7 +81,7 @@ func (a *Article) GetComments() (comments []*Comment) {
   return comments;
 }
 
-func (a *Article) GoString() string {
+func (a *Article) String() string {
   return fmt.Sprintf("(%d) %s: %s\n\n", a.Points, a.User, a.Title)
 }
 
@@ -87,7 +91,7 @@ func (a *Article) PrintComments() {
   scr.Print(a)
 
   for i, comment := range a.Comments {
-    scr.Printf("%d. %s: %s\n", i, comment.User, comment.Text)
+    scr.Printf("%d. %s\n", i + 1, comment)
   }
 }
 
@@ -159,7 +163,8 @@ func (p *Page) GetNext() {
 }
 
 func main() {
-  scr, e := goncurses.Init()
+  var e error
+  scr, e = goncurses.Init()
   if e != nil {
     log.Fatal(e)
   }
