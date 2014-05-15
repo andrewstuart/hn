@@ -172,7 +172,7 @@ func main() {
       scr.Printf("%d. (%d): %s\n", start + i + 1, ar.Points, ar.Title)
     }
 
-    scr.Print("\n\nPress n to continue\nEnter a number and press c to view commnets\nor press q to quit\n\n")
+    scr.Print("\n\nPress n to go forward or p to go back\n\nEnter a number and press c to view comments or v to view the article\n\nPress q to quit\n\n")
     scr.Refresh()
 
     doneWithInput := false
