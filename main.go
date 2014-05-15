@@ -169,7 +169,7 @@ func main() {
     h, _ := scr.MaxYX()
 
     height := h - 5
-s
+
     start := height * page
     end := start + height
 
@@ -192,7 +192,7 @@ s
       switch chr {
       case "c":
         if num, err := strconv.Atoi(input); err == nil {
-          for num - 1 < len(ars) {
+          for num - 1 > len(ars) {
             getArticles()
           }
 
@@ -210,7 +210,7 @@ s
         }
       case "o":
         if num, err := strconv.Atoi(input); err == nil {
-          for num - 1 < len(ars) {
+          for num - 1 > len(ars) {
             getArticles()
           }
 
