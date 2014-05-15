@@ -61,12 +61,14 @@ func (a *Article) GetComments() (comments []*Comment) {
 
   doc.Find(".comment").Each(func (i int, comment *goquery.Selection) {
     text := ""
+    user := comment.Parent().Find("a").First().Text()
 
     comment.Find("font").Each(func (j int, paragraph *goquery.Selection) {
       text += paragraph.Text() + "\n"
     })
 
     comments = append(comments, &Comment{
+      User: user,
       Text: text,
     })
   })
@@ -75,19 +77,18 @@ func (a *Article) GetComments() (comments []*Comment) {
   return comments;
 }
 
-func (a *Article) PrintComments() {
+func (a *Article) PrintHead() {
+  scr.Printf("(%d) %s: %s\n\n", a.Points, a.User, a.Title)
+}
 
+func (a *Article) PrintComments() {
   a.GetComments()
 
-  scr.Clear()
+  a.PrintHead()
 
   for i, comment := range a.Comments {
-    scr.Printf("%d. %s\n", i, comment.Text)
+    scr.Printf("%d. %s: %s\n", i, comment.User, comment.Text)
   }
-
-  scr.Refresh()
-  scr.GetChar()
-
 }
 
 func main() {
@@ -156,7 +157,7 @@ func main() {
         }
       })
 
-      ar.User = row.Find("td.subtext a:first-child").Text()
+      ar.User = row.Find("td.subtext a").First().Text()
 
       ars = append(ars, &ar)
     })
@@ -164,7 +165,7 @@ func main() {
     scr.Clear()
 
     start := 30 * page
-    end := len(ars)
+    end := start + 30
 
     for i, ar := range ars[start:end] {
       scr.Printf("%d. (%d): %s\n", start + i + 1, ar.Points, ar.Title)
@@ -173,13 +174,34 @@ func main() {
     scr.Print("\n\nPress n to continue or q to quit\n\n")
     scr.Refresh()
 
-    switch goncurses.KeyString(scr.GetChar()) {
-    case "c":
-      ars[0].PrintComments()
-    case "q":
-      exit = true
-    default:
-      page += 1
+    doneWithInput := false
+    input := ""
+    for !doneWithInput {
+      chr := goncurses.KeyString(scr.GetChar())
+      switch chr {
+      case "c":
+        if num, err := strconv.Atoi(input); err == nil {
+          scr.Clear()
+          ars[num - 1].PrintComments()
+          scr.Refresh()
+          scr.GetChar()
+          page += 1
+        } else {
+          scr.Clear()
+          scr.Print("\n\nPlease enter a number to select a comment\n\n")
+          scr.Refresh()
+          scr.GetChar()
+          doneWithInput = true
+        }
+      case "q":
+        doneWithInput = true
+        exit = true
+      case "n":
+        page += 1
+        doneWithInput = true
+      default:
+        input += chr
+      }
     }
   }
 }
