@@ -47,7 +47,47 @@ var client *http.Client = &http.Client{Transport: trans}
 func (a *Article) GetComments() (comments []*Comment) {
   comments = make([]*Comment, 0)
 
-  return;
+  articleUrl := YCRoot + "/item?id=" + strconv.Itoa(a.Id)
+
+  resp, e := client.Get(articleUrl)
+
+  if e != nil {
+    log.Fatal(e)
+  }
+
+  if doc, e = goquery.NewDocumentFromResponse(resp); e != nil {
+    log.Fatal(e)
+  }
+
+  doc.Find(".comment").Each(func (i int, comment *goquery.Selection) {
+    text := ""
+
+    comment.Find("font").Each(func (j int, paragraph *goquery.Selection) {
+      text += paragraph.Text() + "\n"
+    })
+
+    comments = append(comments, &Comment{
+      Text: text,
+    })
+  })
+
+  a.Comments = comments
+  return comments;
+}
+
+func (a *Article) PrintComments() {
+
+  a.GetComments()
+
+  scr.Clear()
+
+  for i, comment := range a.Comments {
+    scr.Printf("%d. %s\n", i, comment.Text)
+  }
+
+  scr.Refresh()
+  scr.GetChar()
+
 }
 
 func main() {
@@ -134,6 +174,8 @@ func main() {
     scr.Refresh()
 
     switch goncurses.KeyString(scr.GetChar()) {
+    case "c":
+      ars[0].PrintComments()
     case "q":
       exit = true
     default:
