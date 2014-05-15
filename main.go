@@ -166,8 +166,12 @@ func main() {
 
     scr.Clear()
 
-    start := 30 * page
-    end := start + 30
+    h, _ := scr.MaxYX()
+
+    height := h - 5
+s
+    start := height * page
+    end := start + height
 
     for end > len(ars) {
       getArticles()
@@ -177,7 +181,7 @@ func main() {
       scr.Printf("%d. (%d): %s\n", start + i + 1, ar.Points, ar.Title)
     }
 
-    scr.Print("\n\nPress n to go forward or p to go back\n\nEnter a number and press c to view comments or v to view the article\n\nPress q to quit\n\n")
+    scr.Print("\n(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
     scr.Refresh()
 
     doneWithInput := false
@@ -188,6 +192,10 @@ func main() {
       switch chr {
       case "c":
         if num, err := strconv.Atoi(input); err == nil {
+          for num - 1 < len(ars) {
+            getArticles()
+          }
+
           scr.Clear()
           ars[num - 1].PrintComments()
           scr.Refresh()
@@ -200,8 +208,12 @@ func main() {
           scr.GetChar()
           doneWithInput = true
         }
-      case "v":
+      case "o":
         if num, err := strconv.Atoi(input); err == nil {
+          for num - 1 < len(ars) {
+            getArticles()
+          }
+
           viewInBrowser := exec.Command("xdg-open", ars[num - 1].Url)
           viewInBrowser.Run()
           doneWithInput = true
