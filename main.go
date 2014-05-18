@@ -32,7 +32,7 @@ type Comment struct {
 }
 
 func (c *Comment) String() string {
-  return fmt.Sprintf("%s: %s", c.User, c.Text)
+  return fmt.Sprintf("%s: %s\n", c.User, c.Text)
 }
 
 //Article structure
@@ -128,7 +128,7 @@ func commentString (cs []*Comment, off string) string {
     s += off + fmt.Sprintf("%d. %s\n", i + 1, c)
 
     if len(c.Comments) > 0 {
-      s += commentString(c.Comments, off + "  " + strconv.Itoa(i + 1) + ".")
+      s += commentString(c.Comments, off + strconv.Itoa(i + 1) + ".")
     }
   }
 
@@ -241,6 +241,8 @@ func (p *Page) GetNext() {
     }
   }
 }
+
+type TimeMaker func (int) time.Time
 
 func main() {
   var e error
