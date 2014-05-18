@@ -70,6 +70,12 @@ func (a *Article) GetComments() {
 
       text += comment.Text()
 
+      //Get around HN's little weird "reply" nesting randomness
+      //Is it part of the comment, or isn't it?
+      if last5 := len(text) - 5; last5 > 0 && text[last5:] == "reply" {
+        text = text[:last5]
+      }
+
       c := &Comment{
         User: user,
         Text: text,
