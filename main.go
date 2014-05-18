@@ -28,7 +28,7 @@ type Comment struct {
   Text string `json:"text"`
   User string `json:"user"`
   Id int `json:"id"`
-  Children []*Comment `json:"children"`
+  Comments []*Comment `json:"comments"`
 }
 
 func (c *Comment) String() string {
@@ -47,8 +47,8 @@ type Article struct {
   Created string `json:"created"`
 }
 
-func (a *Article) GetComments() (comments []*Comment) {
-  comments = make([]*Comment, 0)
+func (a *Article) GetComments() {
+  a.Comments = make([]*Comment, 0)
 
   articleUrl := YCRoot + "/item?id=" + strconv.Itoa(a.Id)
 
@@ -62,42 +62,106 @@ func (a *Article) GetComments() (comments []*Comment) {
     log.Fatal(e)
   } else {
 
-    doc.Find(".comment").Each(func (i int, comment *goquery.Selection) {
+    commentStack := make([]*Comment, 1, 10)
+
+    doc.Find("span.comment").Each(func (i int, comment *goquery.Selection) {
       text := ""
       user := comment.Parent().Find("a").First().Text()
 
-      comment.Find("font").Each(func (j int, paragraph *goquery.Selection) {
-        text += paragraph.Text() + "\n"
-      })
+      text += comment.Text()
 
-      comments = append(comments, &Comment{
+      c := &Comment{
         User: user,
         Text: text,
-      })
+        Comments : make([]*Comment, 0),
+      }
+
+      //Get id
+      if idAttr, exists := comment.Prev().Find("a").Last().Attr("href"); exists {
+        idSt := strings.Split(idAttr, "=")[1]
+
+        if id, err := strconv.Atoi(idSt); err == nil {
+          c.Id = id
+        }
+      }
+
+
+      //Track the comment offset for nesting.
+      //TODO: Better selectors
+      if width, exists := comment.Parent().Prev().Prev().Find("img").Attr("width"); exists {
+        offset, _ := strconv.Atoi(width)
+        offset = offset / 40
+
+        lastEle := len(commentStack) - 1 //Index of the last element in the stack
+
+        if offset > lastEle {
+          commentStack = append(commentStack, c)
+          commentStack[lastEle].Comments = append(commentStack[lastEle].Comments, c)
+        } else {
+
+          if offset < lastEle {
+            commentStack = commentStack[:offset + 1] //Trim the stack
+          }
+
+          commentStack[offset] = c
+
+          //Add the comment to its parents
+          if offset == 0 {
+            a.Comments = append(a.Comments, c)
+          } else {
+            commentStack[offset - 1].Comments = append(commentStack[offset - 1].Comments, c)
+          }
+        }
+      }
     })
   }
-
-  a.Comments = comments
-  return comments;
 }
 
 func (a *Article) String() string {
   return fmt.Sprintf("(%d) %s: %s\n\n", a.Points, a.User, a.Title)
 }
 
+func commentString (cs []*Comment, off string) string {
+  s := ""
+
+  for i, c := range cs {
+    s += off + fmt.Sprintf("%d. %s\n", i + 1, c)
+
+    if len(c.Comments) > 0 {
+      s += commentString(c.Comments, off + "  " + strconv.Itoa(i + 1) + ".")
+    }
+  }
+
+  return s
+}
+
+//TODO Use stringer interface
 func (a *Article) PrintComments() {
   a.GetComments()
 
   scr.Print(a)
 
-  for i, comment := range a.Comments {
-    scr.Printf("%d. %s\n", i + 1, comment)
-  }
+  cs := commentString(a.Comments, "")
+
+  scr.Print(cs)
 }
 
 type Page struct {
   NextUrl string `json:"next"`
   Articles []*Article `json:"articles"`
+  CFDUid string
+}
+
+func (p *Page) GetCFDUid() {
+  url := YCRoot + "/news"
+
+  if resp, err := client.Head(url); err == nil {
+    c := resp.Cookies()
+    p.CFDUid = c[0].Raw
+  } else {
+    goncurses.End()
+    log.Fatal(err)
+  }
 }
 
 func (p *Page) GetNext() {
@@ -109,7 +173,16 @@ func (p *Page) GetNext() {
 
   url += p.NextUrl
 
-  if resp, e := client.Get(url); e != nil {
+  req, err := http.NewRequest("GET", url, nil)
+
+  if err != nil {
+    goncurses.End()
+    log.Fatal(err)
+  }
+
+  req.Header.Set("cookie", p.CFDUid)
+
+  if resp, e := client.Do(req); e != nil {
     log.Fatal(e)
   } else {
 
@@ -120,7 +193,14 @@ func (p *Page) GetNext() {
       //Get all the trs with subtext for children then go back one (for the first row)
       rows := doc.Find(".subtext").ParentsFilteredUntil("tr", "tbody").Prev()
 
-      p.NextUrl, _ = doc.Find("td.title").Last().Find("a").Attr("href")
+      var a bool
+
+      p.NextUrl, a = doc.Find("td.title").Last().Find("a").Attr("href")
+
+      if !a {
+        goncurses.End()
+        log.Fatal("Could not retreive next hackernews page. Time to go outside?")
+      }
 
       rows.Each(func(i int, row *goquery.Selection) {
         ar := Article{}
@@ -178,6 +258,8 @@ func main() {
   p := Page{
     NextUrl: "news",
   }
+
+  p.GetCFDUid()
 
   for !exit {
     scr.Refresh()
