@@ -242,8 +242,6 @@ func (p *Page) GetNext() {
   }
 }
 
-type TimeMaker func (int) time.Time
-
 func main() {
   var e error
   scr, e = goncurses.Init()
