@@ -2,14 +2,25 @@ package main
 
 import (
   "log"
+  "flag"
   "os/exec"
   "code.google.com/p/goncurses"
   "strconv"
 )
 
-var scr *goncurses.Window
-
 func main() {
+  s := flag.Bool("s", false, "Serves a webpage with rendings of hackernews articles")
+  flag.Parse()
+
+  if *s {
+    server().ListenAndServe()
+  } else {
+    cli()
+  }
+
+}
+
+func cli () {
   var e error
   scr, e = goncurses.Init()
   if e != nil {
@@ -26,7 +37,7 @@ func main() {
     NextUrl: "news",
   }
 
-  p.GetCFDUid()
+  p.Init()
 
   for !exit {
     scr.Refresh()
@@ -34,7 +45,7 @@ func main() {
 
     scr.Clear()
 
-    height := h - 5
+    height := h - 3
 
     start := height * pageNum
     end := start + height
@@ -54,8 +65,13 @@ func main() {
     input := ""
     for !doneWithInput {
       c := scr.GetChar()
-      chr := goncurses.KeyString(c)
-      switch chr {
+
+      if c == 127 {
+        c = goncurses.Key(goncurses.KEY_BACKSPACE)
+      }
+
+      ch := goncurses.KeyString(c)
+      switch ch {
       case "c":
         if num, err := strconv.Atoi(input); err == nil {
           for num - 1 > len(p.Articles) {
@@ -100,9 +116,27 @@ func main() {
           pageNum -= 1
         }
         doneWithInput = true
+      case "enter":
+        continue
+      case "backspace":
+        //Not the prettiest but whatever
+        cy, cx := scr.CursorYX()
+        if len(input) > 0 {
+          input = input[:len(input) - 1]
+          scr.MoveDelChar(cy, cx - 3)
+          scr.DelChar()
+          scr.DelChar()
+        } else {
+          scr.MoveDelChar(cy, cx - 2)
+          scr.DelChar()
+          scr.DelChar()
+        }
       default:
-        input += chr
+        input += ch
       }
     }
   }
 }
+
+var scr *goncurses.Window
+

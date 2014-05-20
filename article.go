@@ -153,15 +153,15 @@ func (a *Article) PrintComments() {
 type Page struct {
   NextUrl string `json:"next"`
   Articles []*Article `json:"articles"`
-  CFDUid string
+  cfduid string
 }
 
-func (p *Page) GetCFDUid() {
+func (p *Page) Init() {
   url := YCRoot + "/news"
 
   if resp, err := client.Head(url); err == nil {
     c := resp.Cookies()
-    p.CFDUid = c[0].Raw
+    p.cfduid = c[0].Raw
   } else {
     goncurses.End()
     log.Fatal(err)
@@ -184,7 +184,7 @@ func (p *Page) GetNext() {
     log.Fatal(err)
   }
 
-  req.Header.Set("cookie", p.CFDUid)
+  req.Header.Set("cookie", p.cfduid)
 
   if resp, e := client.Do(req); e != nil {
     log.Fatal(e)
