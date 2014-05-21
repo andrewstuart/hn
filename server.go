@@ -42,7 +42,7 @@ func server () {
 
   view := exec.Command("xdg-open", "http://localhost:" + port)
 
-  view.Run()
+  view.Start()
 
   err := s.ListenAndServe()
 
