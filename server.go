@@ -3,7 +3,11 @@ package main
 import (
   "encoding/json"
   "net/http"
+  "log"
+  "os/exec"
 )
+
+const port string = "8000"
 
 var p Page
 
@@ -12,12 +16,17 @@ type hns struct {
 }
 
 func (h hns) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+  headers := w.Header()
+
+  headers["Access-Control-Allow-Origin"] = []string{"*"}
+
   p.GetNext()
   enc := json.NewEncoder(w)
   enc.Encode(p)
 }
 
-func server () (*http.Server) {
+func server () {
+  // log.Fatal("huh?")
   p = Page{
     NextUrl: "news",
   }
@@ -27,9 +36,18 @@ func server () (*http.Server) {
   h := hns{p}
 
   s := &http.Server{
-    Addr: ":80",
+    Addr: ":" + port,
     Handler: h,
   }
 
-  return s
+  view := exec.Command("xdg-open", "http://localhost:" + port)
+
+  view.Start()
+
+  err := s.ListenAndServe()
+
+  if err != nil {
+    log.Fatal(err)
+  }
 }
+

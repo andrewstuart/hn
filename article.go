@@ -9,6 +9,7 @@ import (
   "crypto/tls"
   "strings"
   "strconv"
+  "regexp"
 )
 
 const YCRoot = "https://news.ycombinator.com"
@@ -42,7 +43,7 @@ type Article struct {
   SiteLabel string `json:"siteLabel"`
   Comments []*Comment `json:"comments"`
   User string `json:"user"`
-  Created string `json:"created"`
+  CreatedAgo string `json:"createdAgo"`
 }
 
 func (a *Article) GetComments() {
@@ -214,6 +215,7 @@ func (p *Page) GetNext() {
 
         ar.Title = link.Text()
 
+
         if url, exists := link.Attr("href"); exists {
           ar.Url = url
         }
@@ -221,6 +223,7 @@ func (p *Page) GetNext() {
         ar.SiteLabel = title.Find("span.comhead").Text()
 
         row = row.Next()
+
 
         row.Find("span").Each(func (i int, s *goquery.Selection) {
           if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
@@ -237,6 +240,16 @@ func (p *Page) GetNext() {
             }
           }
         })
+
+        t := row.Find("td.subtext").Text()
+        agoMatch := regexp.MustCompile(`((?:\w*\W){2})(?:ago)`)
+
+        span := agoMatch.FindStringSubmatch(t)
+        ar.CreatedAgo = span[1]
+
+        if ar.CreatedAgo[len(ar.CreatedAgo) - 1] == ' ' {
+          ar.CreatedAgo = ar.CreatedAgo[:len(ar.CreatedAgo)- 1]
+        }
 
         ar.User = row.Find("td.subtext a").First().Text()
 

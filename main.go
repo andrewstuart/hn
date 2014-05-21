@@ -13,13 +13,11 @@ func main() {
   flag.Parse()
 
   if *s {
-    server().ListenAndServe()
+    server()
   } else {
     cli()
   }
-
 }
-
 func cli () {
   var e error
   scr, e = goncurses.Init()
