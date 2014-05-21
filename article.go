@@ -41,6 +41,7 @@ type Article struct {
   Id int `json:"id"`
   Url string `json:"url"`
   SiteLabel string `json:"siteLabel"`
+  NumComments int `json:"numComments"`
   Comments []*Comment `json:"comments"`
   User string `json:"user"`
   CreatedAgo string `json:"createdAgo"`
@@ -241,7 +242,8 @@ func (p *Page) GetNext() {
           }
         })
 
-        t := row.Find("td.subtext").Text()
+        sub := row.Find("td.subtext")
+        t := sub.Text()
         agoMatch := regexp.MustCompile(`((?:\w*\W){2})(?:ago)`)
 
         span := agoMatch.FindStringSubmatch(t)
@@ -251,8 +253,13 @@ func (p *Page) GetNext() {
           ar.CreatedAgo = ar.CreatedAgo[:len(ar.CreatedAgo)- 1]
         }
 
-        ar.User = row.Find("td.subtext a").First().Text()
+        ar.User = sub.Find("a").First().Text()
 
+        comStr := strings.Split(sub.Find("a").Last().Text(), " ")[0]
+
+        if comNum, err := strconv.Atoi(comStr); err == nil {
+          ar.NumComments = comNum
+        }
         p.Articles = append(p.Articles, &ar)
       })
     }
