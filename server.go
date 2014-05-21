@@ -9,18 +9,21 @@ import (
 
 const port string = "8000"
 
-var p Page
-
-type hns struct {
-  p Page
-}
-
-func (h hns) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-  headers := w.Header()
-
-  headers["Access-Control-Allow-Origin"] = []string{"*"}
+func next (w http.ResponseWriter, r *http.Request) {
+  w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
 
   p.GetNext()
+
+  enc := json.NewEncoder(w)
+
+  enc.Encode(p)
+}
+
+var p Page
+
+func send(w http.ResponseWriter, r *http.Request) {
+  w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
+
   enc := json.NewEncoder(w)
   enc.Encode(p)
 }
@@ -32,19 +35,16 @@ func server () {
   }
 
   p.Init()
-
-  h := hns{p}
-
-  s := &http.Server{
-    Addr: ":" + port,
-    Handler: h,
-  }
+  p.GetNext()
 
   view := exec.Command("xdg-open", "http://localhost:" + port)
 
   view.Start()
 
-  err := s.ListenAndServe()
+  http.HandleFunc("/next/", next)
+  http.HandleFunc("/", send)
+
+  err := http.ListenAndServe(":" + port, nil)
 
   if err != nil {
     log.Fatal(err)
