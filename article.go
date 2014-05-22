@@ -157,6 +157,7 @@ type Page struct {
   NextUrl string `json:"next"`
   Articles []*Article `json:"articles"`
   cfduid string
+  byId map[int]*Article
 }
 
 func (p *Page) Init() {
@@ -263,9 +264,20 @@ func (p *Page) GetNext() {
         if comNum, err := strconv.Atoi(comStr); err == nil {
           ar.NumComments = comNum
         }
+
         p.Articles = append(p.Articles, &ar)
+
+        p.byId[ar.Id] = &ar
       })
     }
   }
+}
+
+func (p *Page) GetComments (id int) (ar *Article) {
+  ar = p.byId[id]
+
+  ar.GetComments()
+
+  return ar
 }
 
