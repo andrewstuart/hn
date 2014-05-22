@@ -4,7 +4,7 @@ import (
   "encoding/json"
   "net/http"
   "log"
-  "os/exec"
+  // "os/exec"
   "strconv"
 )
 
@@ -54,9 +54,9 @@ func server () {
   p.Init()
   p.GetNext()
 
-  view := exec.Command("xdg-open", "http://localhost:" + port)
+  // view := exec.Command("xdg-open", "http://localhost:" + port)
 
-  view.Start()
+  // view.Start()
 
   http.HandleFunc("/next/", next)
   http.HandleFunc("/", send)
