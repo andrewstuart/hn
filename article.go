@@ -163,6 +163,8 @@ type Page struct {
 func (p *Page) Init() {
   url := YCRoot + "/news"
 
+  p.byId = make(map[int]*Article)
+
   if resp, err := client.Head(url); err == nil {
     c := resp.Cookies()
     p.cfduid = c[0].Raw
