@@ -36,6 +36,7 @@ func (c *Comment) String() string {
 
 //Article structure
 type Article struct {
+  Position int `json:"position"`
   Title string `json:"title"xml:"`
   Points int `json:"points"`
   Id int `json:"id"`
@@ -209,7 +210,9 @@ func (p *Page) GetNext() {
       }
 
       rows.Each(func(i int, row *goquery.Selection) {
-        ar := Article{}
+        ar := Article{
+          Position: len(p.Articles) + i,
+        }
 
         title := row.Find(".title").Eq(1)
         link := title.Find("a").First()
