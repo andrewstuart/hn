@@ -165,11 +165,12 @@ func (p *Page) Init() {
 
   p.byId = make(map[int]*Article)
 
-  if resp, err := client.Head(url); err == nil {
+  if resp, err := client.Get(url); err == nil {
     c := resp.Cookies()
     p.cfduid = c[0].Raw
   } else {
     goncurses.End()
+    log.Println(resp)
     log.Fatal(err)
   }
 }
@@ -208,6 +209,10 @@ func (p *Page) GetNext() {
       var a bool
 
       p.NextUrl, a = doc.Find("td.title").Last().Find("a").Attr("href")
+
+      for p.NextUrl[0] == '/' {
+        p.NextUrl = p.NextUrl[1:]
+      }
 
       if !a {
         goncurses.End()
