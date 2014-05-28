@@ -1,292 +1,284 @@
 package main
 
 import (
-  "log"
-  "fmt"
-  "github.com/PuerkitoBio/goquery"
-  "code.google.com/p/goncurses"
-  "net/http"
-  "crypto/tls"
-  "strings"
-  "strconv"
-  "regexp"
+	"crypto/tls"
+	"fmt"
+	"log"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"code.google.com/p/goncurses"
+	"github.com/PuerkitoBio/goquery"
 )
 
-const YCRoot = "https://news.ycombinator.com"
+const YCRoot = "https://news.ycombinator.com/"
 const rowsPerArticle = 3
 
 var trans *http.Transport = &http.Transport{
-  TLSClientConfig : &tls.Config{InsecureSkipVerify: true},
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
 
 var client *http.Client = &http.Client{Transport: trans}
 
-
 //Comments structure for HN articles
 type Comment struct {
-  Text string `json:"text"`
-  User string `json:"user"`
-  Id int `json:"id"`
-  Comments []*Comment `json:"comments"`
+	Text     string     `json:"text"`
+	User     string     `json:"user"`
+	Id       int        `json:"id"`
+	Comments []*Comment `json:"comments"`
 }
 
 func (c *Comment) String() string {
-  return fmt.Sprintf("%s: %s\n", c.User, c.Text)
+	return fmt.Sprintf("%s: %s\n", c.User, c.Text)
 }
 
 //Article structure
 type Article struct {
-  Position int `json:"position"`
-  Title string `json:"title"xml:"`
-  Points int `json:"points"`
-  Id int `json:"id"`
-  Url string `json:"url"`
-  SiteLabel string `json:"siteLabel"`
-  NumComments int `json:"numComments"`
-  Comments []*Comment `json:"comments"`
-  User string `json:"user"`
-  CreatedAgo string `json:"createdAgo"`
+	Position    int        `json:"position"`
+	Title       string     `json:"title"xml:"`
+	Points      int        `json:"points"`
+	Id          int        `json:"id"`
+	Url         string     `json:"url"`
+	SiteLabel   string     `json:"siteLabel"`
+	NumComments int        `json:"numComments"`
+	Comments    []*Comment `json:"comments"`
+	User        string     `json:"user"`
+	CreatedAgo  string     `json:"createdAgo"`
 }
 
 func (a *Article) GetComments() {
-  a.Comments = make([]*Comment, 0)
+	a.Comments = make([]*Comment, 0)
 
-  articleUrl := YCRoot + "/item?id=" + strconv.Itoa(a.Id)
+	articleUrl := YCRoot + "/item?id=" + strconv.Itoa(a.Id)
 
-  resp, e := client.Get(articleUrl)
+	resp, e := client.Get(articleUrl)
 
-  if e != nil {
-    log.Fatal(e)
-  }
+	if e != nil {
+		log.Fatal(e)
+	}
 
-  if doc, e := goquery.NewDocumentFromResponse(resp); e != nil {
-    log.Fatal(e)
-  } else {
+	if doc, e := goquery.NewDocumentFromResponse(resp); e != nil {
+		log.Fatal(e)
+	} else {
 
-    commentStack := make([]*Comment, 1, 10)
+		commentStack := make([]*Comment, 1, 10)
 
-    doc.Find("span.comment").Each(func (i int, comment *goquery.Selection) {
-      text := ""
-      user := comment.Parent().Find("a").First().Text()
+		doc.Find("span.comment").Each(func(i int, comment *goquery.Selection) {
+			text := ""
+			user := comment.Parent().Find("a").First().Text()
 
-      text += comment.Text()
+			text += comment.Text()
 
-      //Get around HN's little weird "reply" nesting randomness
-      //Is it part of the comment, or isn't it?
-      if last5 := len(text) - 5; last5 > 0 && text[last5:] == "reply" {
-        text = text[:last5]
-      }
+			//Get around HN's little weird "reply" nesting randomness
+			//Is it part of the comment, or isn't it?
+			if last5 := len(text) - 5; last5 > 0 && text[last5:] == "reply" {
+				text = text[:last5]
+			}
 
-      c := &Comment{
-        User: user,
-        Text: text,
-        Comments : make([]*Comment, 0),
-      }
+			c := &Comment{
+				User:     user,
+				Text:     text,
+				Comments: make([]*Comment, 0),
+			}
 
-      //Get id
-      if idAttr, exists := comment.Prev().Find("a").Last().Attr("href"); exists {
-        idSt := strings.Split(idAttr, "=")[1]
+			//Get id
+			if idAttr, exists := comment.Prev().Find("a").Last().Attr("href"); exists {
+				idSt := strings.Split(idAttr, "=")[1]
 
-        if id, err := strconv.Atoi(idSt); err == nil {
-          c.Id = id
-        }
-      }
+				if id, err := strconv.Atoi(idSt); err == nil {
+					c.Id = id
+				}
+			}
 
+			//Track the comment offset for nesting.
+			//TODO: Better selectors
+			if width, exists := comment.Parent().Prev().Prev().Find("img").Attr("width"); exists {
+				offset, _ := strconv.Atoi(width)
+				offset = offset / 40
 
-      //Track the comment offset for nesting.
-      //TODO: Better selectors
-      if width, exists := comment.Parent().Prev().Prev().Find("img").Attr("width"); exists {
-        offset, _ := strconv.Atoi(width)
-        offset = offset / 40
+				lastEle := len(commentStack) - 1 //Index of the last element in the stack
 
-        lastEle := len(commentStack) - 1 //Index of the last element in the stack
+				if offset > lastEle {
+					commentStack = append(commentStack, c)
+					commentStack[lastEle].Comments = append(commentStack[lastEle].Comments, c)
+				} else {
 
-        if offset > lastEle {
-          commentStack = append(commentStack, c)
-          commentStack[lastEle].Comments = append(commentStack[lastEle].Comments, c)
-        } else {
+					if offset < lastEle {
+						commentStack = commentStack[:offset+1] //Trim the stack
+					}
 
-          if offset < lastEle {
-            commentStack = commentStack[:offset + 1] //Trim the stack
-          }
+					commentStack[offset] = c
 
-          commentStack[offset] = c
-
-          //Add the comment to its parents
-          if offset == 0 {
-            a.Comments = append(a.Comments, c)
-          } else {
-            commentStack[offset - 1].Comments = append(commentStack[offset - 1].Comments, c)
-          }
-        }
-      }
-    })
-  }
+					//Add the comment to its parents
+					if offset == 0 {
+						a.Comments = append(a.Comments, c)
+					} else {
+						commentStack[offset-1].Comments = append(commentStack[offset-1].Comments, c)
+					}
+				}
+			}
+		})
+	}
 }
 
 func (a *Article) String() string {
-  return fmt.Sprintf("(%d) %s: %s\n\n", a.Points, a.User, a.Title)
+	return fmt.Sprintf("(%d) %s: %s\n\n", a.Points, a.User, a.Title)
 }
 
-func commentString (cs []*Comment, off string) string {
-  s := ""
+func commentString(cs []*Comment, off string) string {
+	s := ""
 
-  for i, c := range cs {
-    s += off + fmt.Sprintf("%d. %s\n", i + 1, c)
+	for i, c := range cs {
+		s += off + fmt.Sprintf("%d. %s\n", i+1, c)
 
-    if len(c.Comments) > 0 {
-      s += commentString(c.Comments, off + strconv.Itoa(i + 1) + ".")
-    }
-  }
+		if len(c.Comments) > 0 {
+			s += commentString(c.Comments, off+strconv.Itoa(i+1)+".")
+		}
+	}
 
-  return s
+	return s
 }
 
 //TODO Use stringer interface
 func (a *Article) PrintComments() {
-  a.GetComments()
+	a.GetComments()
 
-  scr.Print(a)
+	scr.Print(a)
 
-  cs := commentString(a.Comments, "")
+	cs := commentString(a.Comments, "")
 
-  scr.Print(cs)
+	scr.Print(cs)
 }
 
 type Page struct {
-  NextUrl string `json:"next"`
-  Articles []*Article `json:"articles"`
-  cfduid string
-  byId map[int]*Article
+	NextUrl  string     `json:"next"`
+	Articles []*Article `json:"articles"`
+	cfduid   string
+	byId     map[int]*Article
 }
 
 func (p *Page) Init() {
-  url := YCRoot + "/news"
+	url := YCRoot + "/news"
 
-  p.byId = make(map[int]*Article)
+	p.byId = make(map[int]*Article)
 
-  if resp, err := client.Get(url); err == nil {
-    c := resp.Cookies()
-    p.cfduid = c[0].Raw
-  } else {
-    goncurses.End()
-    log.Println(resp)
-    log.Fatal(err)
-  }
+	if resp, err := client.Get(url); err == nil {
+		c := resp.Cookies()
+		p.cfduid = c[0].Raw
+	} else {
+		goncurses.End()
+		log.Println(resp)
+		log.Fatal(err)
+	}
 }
 
-func (p *Page) GetNext() {
-  url := YCRoot
+func (p *Page) GetNext() string {
+	url := YCRoot + p.NextUrl
 
-  if p.NextUrl[0] != '/' {
-    url += "/"
-  }
+	req, err := http.NewRequest("GET", url, nil)
 
-  url += p.NextUrl
+	if err != nil {
+		goncurses.End()
+		log.Fatal(err)
+	}
 
-  req, err := http.NewRequest("GET", url, nil)
+	req.Header.Set("cookie", p.cfduid)
+	req.Header.Set("referrer", "https://news.ycombinator.com/news")
+	req.Header.Set("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36")
 
-  if err != nil {
-    goncurses.End()
-    log.Fatal(err)
-  }
+	if resp, e := client.Do(req); e != nil {
+		log.Fatal(e)
+	} else {
 
-  req.Header.Set("cookie", p.cfduid)
-  req.Header.Set("referrer", "https://news.ycombinator.com/news")
-  req.Header.Set("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36")
+		if doc, e := goquery.NewDocumentFromResponse(resp); e != nil {
+			log.Fatal(e)
+		} else {
 
-  if resp, e := client.Do(req); e != nil {
-    log.Fatal(e)
-  } else {
+			//Get all the trs with subtext for children then go back one (for the first row)
+			rows := doc.Find(".subtext").ParentsFilteredUntil("tr", "tbody").Prev()
 
-    if doc, e := goquery.NewDocumentFromResponse(resp); e != nil {
-      log.Fatal(e)
-    } else {
+			var a bool
 
-      //Get all the trs with subtext for children then go back one (for the first row)
-      rows := doc.Find(".subtext").ParentsFilteredUntil("tr", "tbody").Prev()
+			p.NextUrl, a = doc.Find("td.title").Last().Find("a").Attr("href")
 
-      var a bool
+			for p.NextUrl[0] == '/' {
+				p.NextUrl = p.NextUrl[1:]
+			}
 
-      p.NextUrl, a = doc.Find("td.title").Last().Find("a").Attr("href")
+			if !a {
+				goncurses.End()
+				log.Fatal("Could not retreive next hackernews page. Time to go outside?")
+			}
 
-      for p.NextUrl[0] == '/' {
-        p.NextUrl = p.NextUrl[1:]
-      }
+			rows.Each(func(i int, row *goquery.Selection) {
+				ar := Article{
+					Position: len(p.Articles) + i,
+				}
 
-      if !a {
-        goncurses.End()
-        log.Fatal("Could not retreive next hackernews page. Time to go outside?")
-      }
+				title := row.Find(".title").Eq(1)
+				link := title.Find("a").First()
 
-      rows.Each(func(i int, row *goquery.Selection) {
-        ar := Article{
-          Position: len(p.Articles) + i,
-        }
+				ar.Title = link.Text()
 
-        title := row.Find(".title").Eq(1)
-        link := title.Find("a").First()
+				if url, exists := link.Attr("href"); exists {
+					ar.Url = url
+				}
 
-        ar.Title = link.Text()
+				ar.SiteLabel = title.Find("span.comhead").Text()
 
+				row = row.Next()
 
-        if url, exists := link.Attr("href"); exists {
-          ar.Url = url
-        }
+				row.Find("span").Each(func(i int, s *goquery.Selection) {
+					if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
+						ar.Points = pts
+					} else {
+						log.Fatal(err)
+					}
 
-        ar.SiteLabel = title.Find("span.comhead").Text()
+					if idSt, exists := s.Attr("id"); exists {
+						if id, err := strconv.Atoi(strings.Split(idSt, "_")[1]); err == nil {
+							ar.Id = id
+						} else {
+							log.Fatal(err)
+						}
+					}
+				})
 
-        row = row.Next()
+				sub := row.Find("td.subtext")
+				t := sub.Text()
+				agoMatch := regexp.MustCompile(`((?:\w*\W){2})(?:ago)`)
 
+				span := agoMatch.FindStringSubmatch(t)
+				ar.CreatedAgo = span[1]
 
-        row.Find("span").Each(func (i int, s *goquery.Selection) {
-          if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
-            ar.Points = pts
-          } else {
-            log.Fatal(err)
-          }
+				if ar.CreatedAgo[len(ar.CreatedAgo)-1] == ' ' {
+					ar.CreatedAgo = ar.CreatedAgo[:len(ar.CreatedAgo)-1]
+				}
 
-          if idSt, exists := s.Attr("id"); exists {
-            if id, err := strconv.Atoi(strings.Split(idSt, "_")[1]); err == nil {
-              ar.Id = id
-            } else {
-              log.Fatal(err)
-            }
-          }
-        })
+				ar.User = sub.Find("a").First().Text()
 
-        sub := row.Find("td.subtext")
-        t := sub.Text()
-        agoMatch := regexp.MustCompile(`((?:\w*\W){2})(?:ago)`)
+				comStr := strings.Split(sub.Find("a").Last().Text(), " ")[0]
 
-        span := agoMatch.FindStringSubmatch(t)
-        ar.CreatedAgo = span[1]
+				if comNum, err := strconv.Atoi(comStr); err == nil {
+					ar.NumComments = comNum
+				}
 
-        if ar.CreatedAgo[len(ar.CreatedAgo) - 1] == ' ' {
-          ar.CreatedAgo = ar.CreatedAgo[:len(ar.CreatedAgo)- 1]
-        }
+				p.Articles = append(p.Articles, &ar)
 
-        ar.User = sub.Find("a").First().Text()
+				p.byId[ar.Id] = &ar
+			})
+		}
+	}
 
-        comStr := strings.Split(sub.Find("a").Last().Text(), " ")[0]
-
-        if comNum, err := strconv.Atoi(comStr); err == nil {
-          ar.NumComments = comNum
-        }
-
-        p.Articles = append(p.Articles, &ar)
-
-        p.byId[ar.Id] = &ar
-      })
-    }
-  }
+	return p.NextUrl
 }
 
-func (p *Page) GetComments (id int) (ar *Article) {
-  ar = p.byId[id]
+func (p *Page) GetComments(id int) (ar *Article) {
+	ar = p.byId[id]
 
-  ar.GetComments()
+	ar.GetComments()
 
-  return ar
+	return ar
 }
-
