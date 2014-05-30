@@ -14,8 +14,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-const YCRoot = "https://news.ycombinator.com/"
-const rowsPerArticle = 3
+const YC_ROOT = "https://news.ycombinator.com/"
+const ROWS_PER_ARTICLE = 3
 
 var trans *http.Transport = &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -49,7 +49,7 @@ type Article struct {
 	CreatedAgo  string     `json:"createdAgo"`
 }
 
-var commentCache = map[int]Article{}
+var commentCache = make(map[int]Article)
 
 func (a *Article) GetComments() {
 	if _, exists := commentCache[a.Id]; exists {
@@ -58,7 +58,7 @@ func (a *Article) GetComments() {
 
 	a.Comments = make([]*Comment, 0)
 
-	articleUrl := YCRoot + "/item?id=" + strconv.Itoa(a.Id)
+	articleUrl := YC_ROOT + "/item?id=" + strconv.Itoa(a.Id)
 
 	resp, e := client.Get(articleUrl)
 
@@ -164,14 +164,44 @@ func (a *Article) PrintComments() {
 	scr.Print(cs)
 }
 
+type PageCache struct {
+	Created  time.Time        `json:"created"`
+	Pages    map[string]*Page `json:"pages"`
+	Articles []*Article       `json:"articles"`
+	Next     string           `json:"next"`
+}
+
+func NewPageCache() *PageCache {
+	pc := PageCache{
+		Next:  "/news",
+		Pages: make(map[string]*Page),
+	}
+
+	pc.GetNext()
+
+	return &pc
+}
+
+func (pc *PageCache) GetNext() {
+	p := NewPage(pc.Next)
+	pc.Pages[p.Url] = p
+	pc.Next = p.NextUrl
+	pc.Articles = append(pc.Articles, p.Articles...)
+}
+
 type Page struct {
 	NextUrl  string     `json:"next"`
+	Url      string     `json:"url"`
 	Articles []*Article `json:"articles"`
 	cfduid   string
 }
 
-func (p *Page) Init() {
-	url := YCRoot + "/news"
+func NewPage(url string) *Page {
+	p := Page{
+		Url: url,
+	}
+
+	url = YC_ROOT + url
 
 	if resp, err := client.Get(url); err == nil {
 		c := resp.Cookies()
@@ -181,10 +211,6 @@ func (p *Page) Init() {
 		log.Println(resp)
 		log.Println(err)
 	}
-}
-
-func (p *Page) GetNext() string {
-	url := YCRoot + p.NextUrl
 
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -281,7 +307,7 @@ func (p *Page) GetNext() string {
 		}
 	}
 
-	return p.NextUrl
+	return &p
 }
 
 func (p *Page) GetComments(id int) (ar *Article) {

@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 const port string = "8000"
@@ -37,7 +36,6 @@ func next(w http.ResponseWriter, r *http.Request) {
 	if pages[reqUrl] != nil {
 		enc.Encode(pages[reqUrl])
 	} else {
-		pages[p.GetNext()] = &p
 		enc.Encode(p)
 	}
 }
@@ -51,21 +49,7 @@ func send(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(p)
 }
 
-func newPage() {
-	p = Page{
-		NextUrl: "news",
-	}
-
-	p.Init()
-	p.GetNext()
-
-	<-time.After(1 * time.Minute)
-
-	newPage()
-}
-
 func server() {
-	newPage()
 
 	http.HandleFunc("/next/", next)
 	http.HandleFunc("/", send)
