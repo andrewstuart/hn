@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.google.com/p/goncurses"
 	"github.com/PuerkitoBio/goquery"
@@ -36,7 +37,7 @@ func (c *Comment) String() string {
 
 //Article structure
 type Article struct {
-	Position    int        `json:"position"`
+	Rank        int        `json:"rank"`
 	Title       string     `json:"title"xml:"`
 	Points      int        `json:"points"`
 	Id          int        `json:"id"`
@@ -48,7 +49,13 @@ type Article struct {
 	CreatedAgo  string     `json:"createdAgo"`
 }
 
+var commentCache = map[int]Article{}
+
 func (a *Article) GetComments() {
+	if _, exists := commentCache[a.Id]; exists {
+		return
+	}
+
 	a.Comments = make([]*Comment, 0)
 
 	articleUrl := YCRoot + "/item?id=" + strconv.Itoa(a.Id)
@@ -56,11 +63,11 @@ func (a *Article) GetComments() {
 	resp, e := client.Get(articleUrl)
 
 	if e != nil {
-		log.Fatal(e)
+		log.Println(e)
 	}
 
 	if doc, e := goquery.NewDocumentFromResponse(resp); e != nil {
-		log.Fatal(e)
+		log.Println(e)
 	} else {
 
 		commentStack := make([]*Comment, 1, 10)
@@ -93,7 +100,6 @@ func (a *Article) GetComments() {
 			}
 
 			//Track the comment offset for nesting.
-			//TODO: Better selectors
 			if width, exists := comment.Parent().Prev().Prev().Find("img").Attr("width"); exists {
 				offset, _ := strconv.Atoi(width)
 				offset = offset / 40
@@ -121,6 +127,12 @@ func (a *Article) GetComments() {
 			}
 		})
 	}
+
+	commentCache[a.Id] = *a
+
+	<-time.After(5 * time.Minute)
+
+	delete(commentCache, a.Id)
 }
 
 func (a *Article) String() string {
@@ -156,13 +168,10 @@ type Page struct {
 	NextUrl  string     `json:"next"`
 	Articles []*Article `json:"articles"`
 	cfduid   string
-	byId     map[int]*Article
 }
 
 func (p *Page) Init() {
 	url := YCRoot + "/news"
-
-	p.byId = make(map[int]*Article)
 
 	if resp, err := client.Get(url); err == nil {
 		c := resp.Cookies()
@@ -170,7 +179,7 @@ func (p *Page) Init() {
 	} else {
 		goncurses.End()
 		log.Println(resp)
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -181,19 +190,20 @@ func (p *Page) GetNext() string {
 
 	if err != nil {
 		goncurses.End()
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	req.Header.Set("cookie", p.cfduid)
 	req.Header.Set("referrer", "https://news.ycombinator.com/news")
+	//TODO Find out what to do for this
 	req.Header.Set("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36")
 
 	if resp, e := client.Do(req); e != nil {
-		log.Fatal(e)
+		log.Println(e)
 	} else {
 
 		if doc, e := goquery.NewDocumentFromResponse(resp); e != nil {
-			log.Fatal(e)
+			log.Println(e)
 		} else {
 
 			//Get all the trs with subtext for children then go back one (for the first row)
@@ -209,12 +219,12 @@ func (p *Page) GetNext() string {
 
 			if !a {
 				goncurses.End()
-				log.Fatal("Could not retreive next hackernews page. Time to go outside?")
+				log.Println("Could not retreive next hackernews page. Time to go outside?")
 			}
 
 			rows.Each(func(i int, row *goquery.Selection) {
 				ar := Article{
-					Position: len(p.Articles) + i,
+					Rank: len(p.Articles) + i,
 				}
 
 				title := row.Find(".title").Eq(1)
@@ -234,14 +244,14 @@ func (p *Page) GetNext() string {
 					if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
 						ar.Points = pts
 					} else {
-						log.Fatal(err)
+						log.Println(err)
 					}
 
 					if idSt, exists := s.Attr("id"); exists {
 						if id, err := strconv.Atoi(strings.Split(idSt, "_")[1]); err == nil {
 							ar.Id = id
 						} else {
-							log.Fatal(err)
+							log.Println(err)
 						}
 					}
 				})
@@ -267,7 +277,6 @@ func (p *Page) GetNext() string {
 
 				p.Articles = append(p.Articles, &ar)
 
-				p.byId[ar.Id] = &ar
 			})
 		}
 	}
@@ -276,8 +285,6 @@ func (p *Page) GetNext() string {
 }
 
 func (p *Page) GetComments(id int) (ar *Article) {
-	ar = p.byId[id]
-
 	ar.GetComments()
 
 	return ar
