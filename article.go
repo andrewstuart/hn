@@ -44,9 +44,10 @@ type Article struct {
 	Url         string     `json:"url"`
 	SiteLabel   string     `json:"siteLabel"`
 	NumComments int        `json:"numComments"`
-	Comments    []*Comment `json:"comments"`
+	Comments    []*Comment `json:"comments",omitempty`
 	User        string     `json:"user"`
-	CreatedAgo  string     `json:"createdAgo"`
+	CreatedAgo  string     `json:"createdAgo,omitempty"`
+	Created     time.Time  `json:"created",omitempty`
 }
 
 var commentCache = make(map[int]Article)
@@ -165,6 +166,7 @@ func (a *Article) PrintComments() {
 	scr.Print(cs)
 }
 
+//A structure created for caching pages for a given amount of time. This avoids heavy traffic to the HN servers.
 type PageCache struct {
 	Created  time.Time        `json:"created"`
 	Pages    map[string]*Page `json:"pages"`
@@ -195,6 +197,13 @@ type Page struct {
 	Url      string     `json:"url"`
 	Articles []*Article `json:"articles"`
 	cfduid   string
+}
+
+var timeName = map[string]time.Duration{
+	"second": time.Second,
+	"minute": time.Minute,
+	"hour":   time.Hour,
+	"day":    24 * time.Hour,
 }
 
 func NewPage(url string) *Page {
@@ -289,6 +298,21 @@ func NewPage(url string) *Page {
 
 				span := agoMatch.FindStringSubmatch(t)
 				ar.CreatedAgo = span[1]
+
+				a := strings.Split(ar.CreatedAgo, " ")
+
+				du := a[1]
+
+				if du[len(du)-1] == 's' {
+					du = du[:len(du)-1]
+				}
+
+				dur := timeName[du]
+
+				if ct, err := strconv.Atoi(a[0]); err == nil {
+					diff := -int64(ct) * int64(dur)
+					ar.Created = time.Now().Add(time.Duration(diff)).Round(dur)
+				}
 
 				if ar.CreatedAgo[len(ar.CreatedAgo)-1] == ' ' {
 					ar.CreatedAgo = ar.CreatedAgo[:len(ar.CreatedAgo)-1]
