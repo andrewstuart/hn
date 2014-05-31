@@ -51,6 +51,7 @@ type Article struct {
 
 var commentCache = make(map[int]Article)
 
+//Retreives comments for a given article
 func (a *Article) GetComments() {
 	if _, exists := commentCache[a.Id]; exists {
 		return

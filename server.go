@@ -40,6 +40,8 @@ func next(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var pc *PageCache
+
 var p Page
 
 func send(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +52,7 @@ func send(w http.ResponseWriter, r *http.Request) {
 }
 
 func server() {
+	pc = NewPageCache()
 
 	http.HandleFunc("/next/", next)
 	http.HandleFunc("/", send)
