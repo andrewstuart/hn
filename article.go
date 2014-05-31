@@ -234,8 +234,8 @@ func NewPage(url string) *Page {
 
 	req.Header.Set("cookie", p.cfduid)
 	req.Header.Set("referrer", "https://news.ycombinator.com/news")
-	//TODO Find out what to do for this
-	req.Header.Set("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36")
+	req.Header.Set("user-agent", "API Scraper, hn.astuart.co")
+	req.Header.Set("accept-encoding", "compress, gzip")
 
 	req.Write(os.Stdout)
 
