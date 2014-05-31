@@ -17,6 +17,8 @@ import (
 const YC_ROOT = "https://news.ycombinator.com/"
 const ROWS_PER_ARTICLE = 3
 
+var agoRegexp = regexp.MustCompile(`((?:\w*\W){2})(?:ago)`)
+
 var trans *http.Transport = &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
@@ -50,11 +52,38 @@ type Article struct {
 	Created     time.Time  `json:"created",omitempty`
 }
 
-var commentCache = make(map[int]Article)
+var arsCache = make(map[int]*Article)
+
+var timeName = map[string]time.Duration{
+	"second": time.Second,
+	"minute": time.Minute,
+	"hour":   time.Hour,
+	"day":    24 * time.Hour,
+}
+
+func parseCreated(s string) time.Time {
+	agoStr := agoRegexp.FindStringSubmatch(s)
+
+	words := strings.Split(agoStr[1], " ")
+
+	if count, err := strconv.Atoi(words[0]); err == nil {
+		durText := words[1]
+
+		if durText[len(durText)-1] == 's' {
+			durText = durText[:len(durText)-1]
+		}
+
+		dur := timeName[durText]
+		diff := -int64(count) * int64(dur)
+		return time.Now().Add(time.Duration(diff)).Round(dur)
+	} else {
+		return time.Time{}
+	}
+}
 
 //Retreives comments for a given article
 func (a *Article) GetComments() {
-	if _, exists := commentCache[a.Id]; exists {
+	if _, exists := arsCache[a.Id]; exists {
 		return
 	}
 
@@ -91,6 +120,11 @@ func (a *Article) GetComments() {
 				Text:     text,
 				Comments: make([]*Comment, 0),
 			}
+
+			//Get comment create time
+			t := comment.Prev().Text()
+
+			c.Created = parseCreated(t)
 
 			//Get id
 			if idAttr, exists := comment.Prev().Find("a").Last().Attr("href"); exists {
@@ -130,11 +164,11 @@ func (a *Article) GetComments() {
 		})
 	}
 
-	commentCache[a.Id] = *a
+	arsCache[a.Id] = a
 
 	<-time.After(5 * time.Minute)
 
-	delete(commentCache, a.Id)
+	delete(arsCache, a.Id)
 }
 
 func (a *Article) String() string {
@@ -197,13 +231,6 @@ type Page struct {
 	Url      string     `json:"url"`
 	Articles []*Article `json:"articles"`
 	cfduid   string
-}
-
-var timeName = map[string]time.Duration{
-	"second": time.Second,
-	"minute": time.Minute,
-	"hour":   time.Hour,
-	"day":    24 * time.Hour,
 }
 
 //Get a new page by passing a url
@@ -293,29 +320,8 @@ func NewPage(url string) *Page {
 
 				sub := row.Find("td.subtext")
 				t := sub.Text()
-				agoMatch := regexp.MustCompile(`((?:\w*\W){2})(?:ago)`)
 
-				span := agoMatch.FindStringSubmatch(t)
-				ar.CreatedAgo = span[1]
-
-				a := strings.Split(ar.CreatedAgo, " ")
-
-				du := a[1]
-
-				if du[len(du)-1] == 's' {
-					du = du[:len(du)-1]
-				}
-
-				dur := timeName[du]
-
-				if ct, err := strconv.Atoi(a[0]); err == nil {
-					diff := -int64(ct) * int64(dur)
-					ar.Created = time.Now().Add(time.Duration(diff)).Round(dur)
-				}
-
-				if ar.CreatedAgo[len(ar.CreatedAgo)-1] == ' ' {
-					ar.CreatedAgo = ar.CreatedAgo[:len(ar.CreatedAgo)-1]
-				}
+				ar.Created = parseCreated(t)
 
 				ar.User = sub.Find("a").First().Text()
 
@@ -332,10 +338,4 @@ func NewPage(url string) *Page {
 	}
 
 	return &p
-}
-
-func (p *Page) GetComments(id int) (ar *Article) {
-	ar.GetComments()
-
-	return ar
 }

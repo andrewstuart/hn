@@ -8,8 +8,9 @@ import (
 )
 
 const port string = "8000"
-
 const commentRoute string = "/comments/"
+
+var pages = make(map[string]*Page)
 
 func getComments(w http.ResponseWriter, r *http.Request) {
 	w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
@@ -17,15 +18,16 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	idSt := r.URL.Path[len(commentRoute):]
 
 	if id, err := strconv.Atoi(idSt); err == nil {
-		ar := pages[idSt].GetComments()
 		enc := json.NewEncoder(w)
-		enc.Encode(ar)
+		if ar, cached := arsCache[id]; cached {
+			enc.Encode(ar)
+		} else {
+			log.Print("Not cached")
+		}
 	} else {
 		log.Print(err)
 	}
 }
-
-var pages = make(map[string]*Page)
 
 func next(w http.ResponseWriter, r *http.Request) {
 	reqUrl := r.URL.Path[len("/next/"):]
@@ -36,19 +38,17 @@ func next(w http.ResponseWriter, r *http.Request) {
 	if pages[reqUrl] != nil {
 		enc.Encode(pages[reqUrl])
 	} else {
-		enc.Encode(p)
+		enc.Encode(pc.Pages)
 	}
 }
 
 var pc *PageCache
 
-var p Page
-
 func send(w http.ResponseWriter, r *http.Request) {
 	w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
 
 	enc := json.NewEncoder(w)
-	enc.Encode(p)
+	enc.Encode(pc.Pages)
 }
 
 func server() {
