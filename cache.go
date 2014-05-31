@@ -12,7 +12,7 @@ type PageCache struct {
 
 func NewPageCache() *PageCache {
 	pc := PageCache{
-		Next:  "/news",
+		Next:  "news",
 		Pages: make(map[string]*Page),
 	}
 

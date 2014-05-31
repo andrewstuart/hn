@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 const port string = "8000"
@@ -53,12 +52,12 @@ func send(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(pc.Pages)
 }
 
-func reCache() {
-	<-time.After(15 * time.Minute)
+// func reCache() {
+// 	<-time.After(15 * time.Minute)
 
-	pc = NewPageCache()
-	go reCache()
-}
+// 	pc = NewPageCache()
+// 	go reCache()
+// }
 
 var pc *PageCache
 
@@ -80,5 +79,5 @@ func server() {
 		log.Fatal(err)
 	}
 
-	go reCache()
+	// go reCache()
 }
