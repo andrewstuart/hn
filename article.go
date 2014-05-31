@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -200,32 +201,6 @@ func (a *Article) PrintComments() {
 	scr.Print(cs)
 }
 
-//A structure created for caching pages for a given amount of time. This avoids heavy traffic to the HN servers.
-type PageCache struct {
-	Created  time.Time        `json:"created"`
-	Pages    map[string]*Page `json:"pages"`
-	Articles []*Article       `json:"articles"`
-	Next     string           `json:"next"`
-}
-
-func NewPageCache() *PageCache {
-	pc := PageCache{
-		Next:  "/news",
-		Pages: make(map[string]*Page),
-	}
-
-	pc.GetNext()
-
-	return &pc
-}
-
-func (pc *PageCache) GetNext() {
-	p := NewPage(pc.Next)
-	pc.Pages[p.Url] = p
-	pc.Next = p.NextUrl
-	pc.Articles = append(pc.Articles, p.Articles...)
-}
-
 type Page struct {
 	NextUrl  string     `json:"next"`
 	Url      string     `json:"url"`
@@ -261,6 +236,8 @@ func NewPage(url string) *Page {
 	req.Header.Set("referrer", "https://news.ycombinator.com/news")
 	//TODO Find out what to do for this
 	req.Header.Set("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36")
+
+	req.Write(os.Stdout)
 
 	if resp, e := client.Do(req); e != nil {
 		log.Println(e)
