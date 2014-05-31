@@ -42,7 +42,6 @@ type Article struct {
 	Points      int        `json:"points"`
 	Id          int        `json:"id"`
 	Url         string     `json:"url"`
-	SiteLabel   string     `json:"siteLabel"`
 	NumComments int        `json:"numComments"`
 	Comments    []*Comment `json:"comments",omitempty`
 	User        string     `json:"user"`
@@ -206,6 +205,7 @@ var timeName = map[string]time.Duration{
 	"day":    24 * time.Hour,
 }
 
+//Get a new page by passing a url
 func NewPage(url string) *Page {
 	p := Page{
 		Url: url,
@@ -271,8 +271,6 @@ func NewPage(url string) *Page {
 				if url, exists := link.Attr("href"); exists {
 					ar.Url = url
 				}
-
-				ar.SiteLabel = title.Find("span.comhead").Text()
 
 				row = row.Next()
 
