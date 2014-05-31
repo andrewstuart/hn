@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"compress/gzip"
 
 	"code.google.com/p/goncurses"
 	"github.com/PuerkitoBio/goquery"
@@ -21,7 +22,8 @@ const ROWS_PER_ARTICLE = 3
 var agoRegexp = regexp.MustCompile(`((?:\w*\W){2})(?:ago)`)
 
 var trans *http.Transport = &http.Transport{
-	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+	DisableCompression: false,
 }
 
 var client *http.Client = &http.Client{Transport: trans}
@@ -235,15 +237,18 @@ func NewPage(url string) *Page {
 	req.Header.Set("cookie", p.cfduid)
 	req.Header.Set("referrer", "https://news.ycombinator.com/news")
 	req.Header.Set("user-agent", "API Scraper, hn.astuart.co")
-	req.Header.Set("accept-encoding", "compress, gzip")
-
-	req.Write(os.Stdout)
+	req.Header.Set("accept-encoding", "gzip")
 
 	if resp, e := client.Do(req); e != nil {
 		log.Println(e)
 	} else {
 
-		if doc, e := goquery.NewDocumentFromResponse(resp); e != nil {
+		unzipper, e2 := gzip.NewReader(resp.Body)
+		if e2 != nil {
+			log.Println(e2)
+		}
+
+		if doc, e := goquery.NewDocumentFromReader(unzipper); e != nil {
 			log.Println(e)
 		} else {
 
@@ -254,13 +259,13 @@ func NewPage(url string) *Page {
 
 			p.NextUrl, a = doc.Find("td.title").Last().Find("a").Attr("href")
 
-			for p.NextUrl[0] == '/' {
-				p.NextUrl = p.NextUrl[1:]
-			}
-
 			if !a {
 				goncurses.End()
 				log.Println("Could not retreive next hackernews page. Time to go outside?")
+			}
+
+			for len(p.NextUrl) > 0 && p.NextUrl[0] == '/' {
+				p.NextUrl = p.NextUrl[1:]
 			}
 
 			rows.Each(func(i int, row *goquery.Selection) {
