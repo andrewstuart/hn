@@ -10,6 +10,8 @@ import (
 const port string = "8000"
 const commentRoute string = "/comments/"
 
+var articles map[string]*Article
+
 var pages = make(map[string]*Page)
 
 func getComments(w http.ResponseWriter, r *http.Request) {
@@ -29,20 +31,19 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func next(w http.ResponseWriter, r *http.Request) {
-	reqUrl := r.URL.Path[len("/next/"):]
+func getPage(w http.ResponseWriter, r *http.Request) {
+	reqUrl := r.URL.Path[len("/page/"):]
 
 	w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
 	enc := json.NewEncoder(w)
 
-	if pages[reqUrl] != nil {
-		enc.Encode(pages[reqUrl])
-	} else {
-		enc.Encode(pc.Pages)
+	if page, cacheExists := pc.Pages[reqUrl]; cacheExists {
+		enc.Encode(page)
+	} else if reqUrl == pc.Next {
+		page = pc.GetNext()
+		enc.Encode(page)
 	}
 }
-
-var pc *PageCache
 
 func send(w http.ResponseWriter, r *http.Request) {
 	w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
@@ -51,10 +52,17 @@ func send(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(pc.Pages)
 }
 
+var pc *PageCache
+
 func server() {
+	articles = make(map[string]*Article)
 	pc = NewPageCache()
 
-	http.HandleFunc("/next/", next)
+	for _, art := range pc.Articles {
+		articles[strconv.Itoa(art.Id)] = art
+	}
+
+	http.HandleFunc("/page/", getPage)
 	http.HandleFunc("/", send)
 	http.HandleFunc(commentRoute, getComments)
 

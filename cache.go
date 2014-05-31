@@ -21,9 +21,11 @@ func NewPageCache() *PageCache {
 	return &pc
 }
 
-func (pc *PageCache) GetNext() {
+func (pc *PageCache) GetNext() *Page {
 	p := NewPage(pc.Next)
 	pc.Pages[p.Url] = p
 	pc.Next = p.NextUrl
 	pc.Articles = append(pc.Articles, p.Articles...)
+
+	return p
 }
