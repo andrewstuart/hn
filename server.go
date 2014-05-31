@@ -17,7 +17,7 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	idSt := r.URL.Path[len(commentRoute):]
 
 	if id, err := strconv.Atoi(idSt); err == nil {
-		ar := p.GetComments(id)
+		ar := pages[idSt].GetComments()
 		enc := json.NewEncoder(w)
 		enc.Encode(ar)
 	} else {
