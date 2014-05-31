@@ -28,6 +28,7 @@ type Comment struct {
 	Text     string     `json:"text"`
 	User     string     `json:"user"`
 	Id       int        `json:"id"`
+	Created  time.Time  `json:"created,omitempty"`
 	Comments []*Comment `json:"comments"`
 }
 
@@ -39,7 +40,7 @@ func (c *Comment) String() string {
 type Article struct {
 	Rank        int        `json:"rank"`
 	Title       string     `json:"title"xml:"`
-	Points      int        `json:"points"`
+	Karma       int        `json:"karma"`
 	Id          int        `json:"id"`
 	Url         string     `json:"url"`
 	NumComments int        `json:"numComments"`
@@ -137,7 +138,7 @@ func (a *Article) GetComments() {
 }
 
 func (a *Article) String() string {
-	return fmt.Sprintf("(%d) %s: %s\n\n", a.Points, a.User, a.Title)
+	return fmt.Sprintf("(%d) %s: %s\n\n", a.Karma, a.User, a.Title)
 }
 
 func commentString(cs []*Comment, off string) string {
@@ -275,8 +276,8 @@ func NewPage(url string) *Page {
 				row = row.Next()
 
 				row.Find("span").Each(func(i int, s *goquery.Selection) {
-					if pts, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
-						ar.Points = pts
+					if karma, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
+						ar.Karma = karma
 					} else {
 						log.Println(err)
 					}

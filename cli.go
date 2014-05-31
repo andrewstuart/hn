@@ -39,7 +39,7 @@ func cli() {
 		}
 
 		for i, ar := range p.Articles[start:end] {
-			scr.Printf("%d. (%d): %s\n", start+i+1, ar.Points, ar.Title)
+			scr.Printf("%d. (%d): %s\n", start+i+1, ar.Karma, ar.Title)
 		}
 
 		scr.Print("\n(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
