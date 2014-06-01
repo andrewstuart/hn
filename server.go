@@ -12,8 +12,6 @@ const commentRoute string = "/comments/"
 
 var articles map[string]*Article
 
-var pages = make(map[string]*Page)
-
 func getComments(w http.ResponseWriter, r *http.Request) {
 	w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
 

@@ -56,7 +56,7 @@ type Comment struct {
 	User     string     `json:"user"`
 	Id       int        `json:"id"`
 	Created  time.Time  `json:"created,omitempty"`
-	Comments []*Comment `json:"comments"`
+	Comments []*Comment `json:"comments,omitempty"`
 }
 
 func (c *Comment) String() string {
@@ -231,7 +231,8 @@ type Page struct {
 //Get a new page by passing a url
 func NewPage(url string) *Page {
 	p := Page{
-		Url: url,
+		Url:      url,
+		Articles: make([]*Article, 0),
 	}
 
 	url = YC_ROOT + url
