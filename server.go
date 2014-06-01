@@ -51,7 +51,7 @@ func send(w http.ResponseWriter, r *http.Request) {
 }
 
 func reCache() {
-	<-time.After(15 * time.Minute)
+	<-time.After(30 * time.Minute)
 
 	pc = NewPageCache()
 	go reCache()
