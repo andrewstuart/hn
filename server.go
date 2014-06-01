@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const commentRoute string = "/comments/"
@@ -51,12 +52,12 @@ func send(w http.ResponseWriter, r *http.Request) {
 	enc.Encode(pc.Pages)
 }
 
-// func reCache() {
-// 	<-time.After(15 * time.Minute)
+func reCache() {
+	<-time.After(15 * time.Minute)
 
-// 	pc = NewPageCache()
-// 	go reCache()
-// }
+	pc = NewPageCache()
+	go reCache()
+}
 
 var pc *PageCache
 
@@ -78,5 +79,5 @@ func server(addr string) {
 		log.Fatal(err)
 	}
 
-	// go reCache()
+	go reCache()
 }
