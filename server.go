@@ -7,7 +7,6 @@ import (
 	"strconv"
 )
 
-const port string = "8000"
 const commentRoute string = "/comments/"
 
 var articles map[string]*Article
@@ -61,7 +60,7 @@ func send(w http.ResponseWriter, r *http.Request) {
 
 var pc *PageCache
 
-func server() {
+func server(addr string) {
 	articles = make(map[string]*Article)
 	pc = NewPageCache()
 
@@ -73,7 +72,7 @@ func server() {
 	http.HandleFunc("/", send)
 	http.HandleFunc(commentRoute, getComments)
 
-	err := http.ListenAndServe(":"+port, nil)
+	err := http.ListenAndServe(addr, nil)
 
 	if err != nil {
 		log.Fatal(err)
