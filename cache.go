@@ -1,13 +1,26 @@
 package main
 
-import "time"
+import (
+	"math/rand"
+	"time"
+)
 
 //A structure created for caching pages for a given amount of time. This avoids heavy traffic to the HN servers.
 type PageCache struct {
 	Created  time.Time        `json:"created"`
 	Pages    map[string]*Page `json:"pages"`
 	Articles []*Article       `json:"articles"`
-	Next     string           `json:"next"`
+	next     string
+	Next     string `json:"next"`
+}
+
+func RandomString() string {
+	rand.Seed(time.Now().Unix())
+	b := make([80]byte)
+
+	rand.Read(b)
+
+	return string(b)
 }
 
 func NewPageCache() *PageCache {
