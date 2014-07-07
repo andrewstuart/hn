@@ -16,9 +16,7 @@ type PageCache struct {
 
 func RandomString() string {
 	rand.Seed(time.Now().Unix())
-	b := make([80]byte)
-
-	rand.Read(b)
+	b := make([]byte, 80)
 
 	return string(b)
 }
