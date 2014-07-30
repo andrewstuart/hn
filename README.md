@@ -3,7 +3,7 @@ hn
 
 A hackernews ncurses CLI reader written in Go
 
-Right now it's able to view articles, view comments, and open a page in your default browser, all done directly from the site using goquery (jquery-like library for Go) and goncurses.
+Right now it's able to view articles, view comments, and open a page in your default browser, all done directly from the site using goquery (jquery-like library for Go), goncurses, and xdg-open for opening pages.
 
 It's really not much, but I like it because I can view and interact with things a bit faster in the terminal.
 

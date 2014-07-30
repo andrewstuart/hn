@@ -33,9 +33,9 @@ func getFitLines(s string) []string {
 			}
 
 			//Add substring to slice
-			p = append(p, line[:l])
+			p = append(p, line[:l-1])
 
-			line = line[l+1:]
+			line = line[l:]
 		}
 
 		p = append(p, line)
@@ -46,14 +46,21 @@ func getFitLines(s string) []string {
 
 func pagify(t string, n int) string {
 	h, _ := scr.MaxYX()
+	h -= BOTTOM_MARGIN
 
 	lines := getFitLines(t)
 
-	if len(lines) > h {
-		if n < len(lines)-h {
-			lines = lines[n : n+(h-BOTTOM_MARGIN)]
+	nLines := len(lines)
+
+	//If text won't fit
+	if nLines > h {
+		//Determine start point
+		if n < nLines-h {
+			//If n is not in last h elements, reslice starting at n
+			lines = lines[n : n+h]
 		} else {
-			lines = lines[len(lines)-h:]
+			//Else, Get last h (at most) elements
+			lines = lines[nLines-h:]
 		}
 	}
 
@@ -127,6 +134,7 @@ func cli() {
 					for cont {
 						scr.Clear()
 						scr.Print(pagify(text, line))
+						scr.Print("\n\n(d/u scroll 30 lines; j/k: scroll 1 line; n/p scroll 1 page; q: quit)")
 						scr.Refresh()
 
 						a := scr.GetChar()
@@ -150,8 +158,12 @@ func cli() {
 						case "p":
 							line -= h
 							break
-						default:
+						case "q":
 							cont = false
+							break
+						default:
+							scr.DelChar()
+							scr.DelChar()
 							break
 						}
 
