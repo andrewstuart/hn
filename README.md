@@ -1,5 +1,3 @@
-#hn
-
 ##About
 
 A hackernews ncurses CLI reader written in Go
