@@ -8,9 +8,9 @@ It's really not much, but I like it because I can view and interact with things 
 
 It's also got a clunky REST API that can be started via the -s option. I'd intended to do some caching so I could expose an API publicly, but shortly after that, HN came out with their own API. I don't really plan to do much with the API in the future.
 
-![Story view](https://raw.github.com/astuart/hn/master/readme/stories.png)
+![Story view](https://raw.github.com/andrewstuart/hn/master/readme/stories.png)
 
-![Comment view](https://raw.github.com/astuart/hn/master/readme/comments.png)
+![Comment view](https://raw.github.com/andrewstuart/hn/master/readme/comments.png)
 
 ##Usage
 
