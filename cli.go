@@ -28,7 +28,7 @@ func getFitLines(s string) []string {
 			}
 
 			//Find last space
-			for line[l] != ' ' && line[l] != '\n' {
+			for line[l] != ' ' {
 				l--
 			}
 
