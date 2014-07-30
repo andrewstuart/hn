@@ -9,6 +9,8 @@ import (
 	"code.google.com/p/goncurses"
 )
 
+const BOTTOM_MARGIN int = 3
+
 func getFitLines(s string) []string {
 	_, w := scr.MaxYX()
 
@@ -26,7 +28,7 @@ func getFitLines(s string) []string {
 			}
 
 			//Find last space
-			for line[l] != ' ' {
+			for line[l] != ' ' && line[l] != '\n' {
 				l--
 			}
 
@@ -42,20 +44,20 @@ func getFitLines(s string) []string {
 	return p
 }
 
-const BOTTOM_MARGIN int = 3
-
 func pagify(t string, n int) string {
 	h, _ := scr.MaxYX()
 
-	p := getFitLines(t)
+	lines := getFitLines(t)
 
-	if n < len(p)-h {
-		p = p[n : n+(h-BOTTOM_MARGIN)]
-	} else {
-		p = p[len(p)-h:]
+	if len(lines) > h {
+		if n < len(lines)-h {
+			lines = lines[n : n+(h-BOTTOM_MARGIN)]
+		} else {
+			lines = lines[len(lines)-h:]
+		}
 	}
 
-	return strings.Join(p, "\n")
+	return strings.Join(lines, "\n")
 }
 
 func cli() {
