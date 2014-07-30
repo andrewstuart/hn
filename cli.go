@@ -11,6 +11,7 @@ import (
 func cli() {
 	var e error
 	scr, e = goncurses.Init()
+
 	if e != nil {
 		log.Fatal(e)
 	}
@@ -65,7 +66,28 @@ func cli() {
 					scr.Clear()
 					p.Articles[num-1].PrintComments()
 					scr.Refresh()
-					scr.GetChar()
+
+					cont := true
+					for cont {
+						a := scr.GetChar()
+						switch goncurses.KeyString(a) {
+						case "d":
+							scr.Scroll(30)
+							break
+						case "u":
+							scr.Scroll(-30)
+							break
+						case "j":
+							scr.Scroll(1)
+							break
+						case "k":
+							scr.Scroll(-1)
+							break
+						default:
+							cont = false
+							break
+						}
+					}
 					doneWithInput = true
 				} else {
 					scr.Clear()

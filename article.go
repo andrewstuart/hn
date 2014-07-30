@@ -32,7 +32,7 @@ var client *http.Client = &http.Client{Transport: trans}
 func doReq(req *http.Request) (doc *goquery.Document) {
 	req.Header.Set("cookie", cfduid)
 	req.Header.Set("referrer", "https://news.ycombinator.com/news")
-	req.Header.Set("user-agent", "API Scraper, hn.astuart.co")
+	req.Header.Set("user-agent", "CLI Scraper, hn.astuart.co")
 	req.Header.Set("accept-encoding", "gzip")
 
 	if resp, err := client.Do(req); err != nil {
@@ -89,6 +89,10 @@ var timeName = map[string]time.Duration{
 func parseCreated(s string) time.Time {
 	agoStr := agoRegexp.FindStringSubmatch(s)
 
+	if len(agoStr) == 0 {
+		return time.Now()
+	}
+
 	words := strings.Split(agoStr[1], " ")
 
 	if count, err := strconv.Atoi(words[0]); err == nil {
@@ -134,7 +138,7 @@ func (a *Article) GetComments() {
 
 		//Get around HN's little weird "reply" nesting randomness
 		//Is it part of the comment, or isn't it?
-		if last5 := len(text) - 5; last5 > 0 && text[last5:] == "reply" {
+		if last5 := len(text) - 5; len(text) > 0 && last5 > 0 && text[last5:] == "reply" {
 			text = text[:last5]
 		}
 
@@ -145,9 +149,9 @@ func (a *Article) GetComments() {
 		}
 
 		//Get comment create time
-		t := comment.Prev().Text()
+		// t := comment.Prev().Text()
 
-		c.Created = parseCreated(t)
+		// c.Created = parseCreated(t)
 
 		//Get id
 		if idAttr, exists := comment.Prev().Find("a").Last().Attr("href"); exists {
@@ -188,9 +192,11 @@ func (a *Article) GetComments() {
 
 	arsCache[a.Id] = a
 
-	<-time.After(5 * time.Minute)
-
-	delete(arsCache, a.Id)
+	//Cache the article for 5 minutes
+	go func() {
+		<-time.After(5 * time.Minute)
+		delete(arsCache, a.Id)
+	}()
 }
 
 func (a *Article) String() string {
