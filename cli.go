@@ -33,7 +33,7 @@ func getFitLines(s string) []string {
 			}
 
 			//Add substring to slice
-			p = append(p, line[:l-1])
+			p = append(p, line[:l])
 
 			line = line[l:]
 		}
