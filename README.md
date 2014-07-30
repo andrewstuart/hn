@@ -11,6 +11,10 @@ It's also got a clunky REST API that can be started via the -s option. I'd inten
 
 ##Usage
 
+```bash
+hn
+```
+
 ###Story view
 - n) Go to next page
 - p) Go to previous page
@@ -26,3 +30,13 @@ It's also got a clunky REST API that can be started via the -s option. I'd inten
 - n) Go down 1 page
 - p) Go up 1 page
 - q) Go back to story view
+
+##API (unfinished/unnecessary)
+
+This basically only works for page 1 in its current state, IIRC.
+
+```bash
+hn -s -p 3000 & 
+
+curl localhost:3000
+```
