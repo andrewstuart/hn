@@ -4,9 +4,59 @@ import (
 	"log"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"code.google.com/p/goncurses"
 )
+
+func getFitLines(s string) []string {
+	_, w := scr.MaxYX()
+
+	a := strings.Split(s, "\n")
+
+	p := make([]string, 0, len(a))
+
+	//Newlines for stuff
+	for _, line := range a {
+		for len(line) > w {
+			//Current line length
+			l := w
+			if l > len(line) {
+				l = len(line)
+			}
+
+			//Find last space
+			for line[l] != ' ' {
+				l--
+			}
+
+			//Add substring to slice
+			p = append(p, line[:l])
+
+			line = line[l+1:]
+		}
+
+		p = append(p, line)
+	}
+
+	return p
+}
+
+const BOTTOM_MARGIN int = 3
+
+func pagify(t string, n int) string {
+	h, _ := scr.MaxYX()
+
+	p := getFitLines(t)
+
+	if n < len(p)-h {
+		p = p[n : n+(h-BOTTOM_MARGIN)]
+	} else {
+		p = p[len(p)-h:]
+	}
+
+	return strings.Join(p, "\n")
+}
 
 func cli() {
 	var e error
@@ -30,7 +80,7 @@ func cli() {
 
 		scr.Clear()
 
-		height := h - 3
+		height := h - BOTTOM_MARGIN
 
 		start := height * pageNum
 		end := start + height
@@ -59,35 +109,56 @@ func cli() {
 			switch ch {
 			case "c":
 				if num, err := strconv.Atoi(input); err == nil {
+					if num < 1 {
+						doneWithInput = true
+						break
+					}
+
 					for num-1 > len(p.Articles) {
 						p.GetNext()
 					}
 
-					scr.Clear()
-					p.Articles[num-1].PrintComments()
-					scr.Refresh()
+					text := p.Articles[num-1].PrintComments()
+					line := 0
 
 					cont := true
 					for cont {
+						scr.Clear()
+						scr.Print(pagify(text, line))
+						scr.Refresh()
+
 						a := scr.GetChar()
+
 						switch goncurses.KeyString(a) {
 						case "d":
-							scr.Scroll(30)
+							line += 30
 							break
 						case "u":
-							scr.Scroll(-30)
+							line -= 30
 							break
 						case "j":
-							scr.Scroll(1)
+							line += 1
 							break
 						case "k":
-							scr.Scroll(-1)
+							line -= 1
+							break
+						case "n":
+							line += h
+							break
+						case "p":
+							line -= h
 							break
 						default:
 							cont = false
 							break
 						}
+
+						// Verify lines are not negative. Bad mojo
+						if line < 0 {
+							line = 0
+						}
 					}
+
 					doneWithInput = true
 				} else {
 					scr.Clear()
@@ -139,6 +210,7 @@ func cli() {
 				}
 			default:
 				input += ch
+				break
 			}
 		}
 	}

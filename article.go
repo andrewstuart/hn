@@ -218,14 +218,10 @@ func commentString(cs []*Comment, off string) string {
 }
 
 //TODO Use stringer interface
-func (a *Article) PrintComments() {
+func (a *Article) PrintComments() string {
 	a.GetComments()
 
-	scr.Print(a)
-
-	cs := commentString(a.Comments, "")
-
-	scr.Print(cs)
+	return a.String() + commentString(a.Comments, "")
 }
 
 type Page struct {
