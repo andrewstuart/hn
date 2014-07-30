@@ -12,6 +12,14 @@ It's also got a clunky REST API that can be started via the -s option. I'd inten
 
 ![Comment view](https://raw.github.com/andrewstuart/hn/master/readme/comments.png)
 
+##Installation
+
+Assuming you have your GOPATH and PATH set appropriately:
+
+```bash
+go get github.com/andrewstuart/hn
+```
+
 ##Usage
 
 ```bash
