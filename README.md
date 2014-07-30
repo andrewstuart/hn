@@ -12,7 +12,7 @@ It's also got a clunky REST API that can be started via the -s option. I'd inten
 ##Usage
 
 ```bash
-hn
+$ hn
 ```
 
 ###Story view
@@ -36,7 +36,7 @@ hn
 This basically only works for page 1 in its current state, IIRC.
 
 ```bash
-hn -s -p 3000 & 
+$ hn -s -p 3000 & 
 
-curl localhost:3000
+$ curl localhost:3000
 ```
