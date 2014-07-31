@@ -12,6 +12,8 @@ Right now it's able to view articles, view comments, and open a page in your def
 
 Assuming you have your GOPATH and PATH set appropriately:
 
+Unfortunately, you'll also need mercurial installed, for packages hosted at code.google.com.  If you're working with Go, you've probably already done that.
+
 ```bash
 go get github.com/andrewstuart/hn
 ```
