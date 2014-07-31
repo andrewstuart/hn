@@ -75,6 +75,12 @@ func cli() {
 		log.Fatal(e)
 	}
 
+	e = goncurses.StartColor()
+
+	if e != nil {
+		log.Fatal(e)
+	}
+
 	defer goncurses.End()
 
 	exit := false
