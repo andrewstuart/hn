@@ -13,6 +13,6 @@ func main() {
 		port := ":" + *p
 		server(port)
 	} else {
-		cli()
+		runCli()
 	}
 }
