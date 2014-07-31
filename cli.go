@@ -44,7 +44,7 @@ func getFitLines(s string) []string {
 	return p
 }
 
-func pagify(t string, n int) string {
+func paginate(t string, n int) string {
 	h, _ := scr.MaxYX()
 	h -= BOTTOM_MARGIN
 
@@ -133,7 +133,7 @@ func cli() {
 					cont := true
 					for cont {
 						scr.Clear()
-						scr.Print(pagify(text, line))
+						scr.Print(paginate(text, line))
 						scr.Print("\n\n(d/u scroll 30 lines; j/k: scroll 1 line; n/p scroll 1 page; q: quit)")
 						scr.Refresh()
 
