@@ -27,8 +27,8 @@ $ hn
 ###Story view
 - n) Go to next page
 - p) Go to previous page
-- <num>c) View comments for story <num>
-- <num>o) Open story <num> in default browser
+- (num)c) View comments for story (num)
+- (num)o) Open story (num) in default browser
 - q) Quit hn
 
 ###Comments view
