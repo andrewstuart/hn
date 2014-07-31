@@ -32,7 +32,7 @@ var client *http.Client = &http.Client{Transport: trans}
 func doReq(req *http.Request) (doc *goquery.Document) {
 	req.Header.Set("cookie", cfduid)
 	req.Header.Set("referrer", "https://news.ycombinator.com/news")
-	req.Header.Set("user-agent", "CLI Scraper, hn.astuart.co")
+	req.Header.Set("user-agent", "CLI Scraper (github.com/andrewstuart/hn)")
 	req.Header.Set("accept-encoding", "gzip")
 
 	if resp, err := client.Do(req); err != nil {
@@ -203,6 +203,7 @@ func (a *Article) String() string {
 	return fmt.Sprintf("(%d) %s: %s\n\n", a.Karma, a.User, a.Title)
 }
 
+//Recursively get comments
 func commentString(cs []*Comment, off string) string {
 	s := ""
 
@@ -217,7 +218,6 @@ func commentString(cs []*Comment, off string) string {
 	return s
 }
 
-//TODO Use stringer interface
 func (a *Article) PrintComments() string {
 	a.GetComments()
 
