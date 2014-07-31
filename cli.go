@@ -9,7 +9,7 @@ import (
 	"code.google.com/p/goncurses"
 )
 
-const BOTTOM_MARGIN int = 3
+var root, scr, menu *goncurses.Window
 
 func getFitLines(s string) []string {
 	_, w := scr.MaxYX()
@@ -46,7 +46,6 @@ func getFitLines(s string) []string {
 
 func paginate(t string, n int) string {
 	h, _ := scr.MaxYX()
-	h -= BOTTOM_MARGIN
 
 	lines := getFitLines(t)
 
@@ -67,38 +66,50 @@ func paginate(t string, n int) string {
 	return strings.Join(lines, "\n")
 }
 
+type cli struct {
+	Root *goncurses.Window
+	Main *goncurses.Window
+	Help *goncurses.Window
+}
+
+func (h cli) Refresh() {
+	h.Root.Refresh()
+}
+
+const MENU_HEIGHT int = 3
+
+var c cli
+
+func GetCli() hncli {
+	c = cli{}
+
+	root, e := goncurses.Init()
+
+	if e != nil {
+		goncurses.End()
+		log.Fatal(e)
+	}
+
+	h, w := root.MaxYX()
+
+	c.Root = root
+	c.Main = root.Sub(h-MENU_HEIGHT, w, 0, 0)
+	c.Help = root.Sub(MENU_HEIGHT, w, h-MENU_HEIGHT, 0)
+}
+
 func cli() {
-	var e error
-	scr, e = goncurses.Init()
-
-	if e != nil {
-		log.Fatal(e)
-	}
-
-	e = goncurses.StartColor()
-
-	if e != nil {
-		log.Fatal(e)
-	}
-
-	defer goncurses.End()
-
 	exit := false
-
 	pageNum := 0
-
 	p := NewPageCache()
 
 	for !exit {
-		scr.Refresh()
 		h, _ := scr.MaxYX()
 
 		scr.Clear()
+		menu.Clear()
 
-		height := h - BOTTOM_MARGIN
-
-		start := height * pageNum
-		end := start + height
+		start := h * pageNum
+		end := start + h
 
 		for end > len(p.Articles) {
 			p.GetNext()
@@ -108,8 +119,9 @@ func cli() {
 			scr.Printf("%d. (%d): %s\n", start+i+1, ar.Karma, ar.Title)
 		}
 
-		scr.Print("\n(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
-		scr.Refresh()
+		menu.Print("\n(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
+
+		root.Refresh()
 
 		doneWithInput := false
 		input := ""
@@ -235,5 +247,3 @@ func cli() {
 		}
 	}
 }
-
-var scr *goncurses.Window
