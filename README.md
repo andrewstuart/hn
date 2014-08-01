@@ -1,6 +1,6 @@
 ##About
 
-A Hacker News ncurses CLI reader written in Go
+A Hacker News ncurses CLI reader written in Go. Currently known to work on Linux, and a few people have gotten it to work on OSX.
 
 Right now it's able to view articles, view comments, and open a page in your default browser, all done directly from the site using goquery (jquery-like library for Go), goncurses, and xdg-open for opening pages.
 
