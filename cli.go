@@ -29,6 +29,7 @@ func storyHandler(ch string) {
 		} else {
 			cli.Alert("Please enter a number to select a comment")
 		}
+		input = ""
 		break
 	case "o":
 		if num, err := strconv.Atoi(input); err == nil {
@@ -141,7 +142,7 @@ func runCli() {
 
 	cli.SetContent(stories)
 	cli.SetKeyHandler(storyHandler)
-	cli.SetHelp("\n(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
+	cli.SetHelp("(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
 
 	cli.Refresh()
 	cli.Run()

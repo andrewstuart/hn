@@ -64,6 +64,7 @@ func (h *hncli) SetContent(text string) {
 func (h *hncli) SetHelp(text string) {
 	h.helpText = text
 	h.help.Clear()
+	h.help.Move(1, 0)
 	h.help.Print(text)
 	h.help.Refresh()
 }
