@@ -123,7 +123,7 @@ func getStories(pageNum int) string {
 
 	str := ""
 	for i, ar := range p.Articles[start:end] {
-		str += fmt.Sprintf("%d. (%d): %s\n", start+i+1, ar.Karma, ar.Title)
+		str += fmt.Sprintf("%4d.\t(%d)\t%s\n", start+i+1, ar.Karma, ar.Title)
 	}
 
 	return str
