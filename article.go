@@ -211,7 +211,7 @@ func commentString(cs []*Comment, off string) string {
 	s := ""
 
 	for _, c := range cs {
-		s += off + fmt.Sprintf(off+"%s\n", c)
+		s += off + fmt.Sprintf(off+"%s\n\n", c)
 
 		if len(c.Comments) > 0 {
 			s += commentString(c.Comments, off+"  ")
