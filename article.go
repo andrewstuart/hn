@@ -60,7 +60,7 @@ type Comment struct {
 }
 
 func (c *Comment) String() string {
-	return fmt.Sprintf("%s: %s\n", c.User, c.Text)
+	return strings.Replace(fmt.Sprintf("%s: %s", c.User, c.Text), "\n", " ", -1)
 }
 
 //Article structure
@@ -203,15 +203,18 @@ func (a *Article) String() string {
 	return fmt.Sprintf("(%d) %s: %s\n\n", a.Karma, a.User, a.Title)
 }
 
+//The character used to pad comments for printing
+const COMMENT_PAD = "   "
+
 //Recursively get comments
 func commentString(cs []*Comment, off string) string {
 	s := ""
 
-	for i, c := range cs {
-		s += off + fmt.Sprintf("%d. %s\n", i+1, c)
+	for _, c := range cs {
+		s += off + fmt.Sprintf(off+"%s\n", c)
 
 		if len(c.Comments) > 0 {
-			s += commentString(c.Comments, off+strconv.Itoa(i+1)+".")
+			s += commentString(c.Comments, off+"  ")
 		}
 	}
 

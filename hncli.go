@@ -115,7 +115,7 @@ func (h *hncli) Run() {
 //Show an alert, wait for a character, then reset
 func (h *hncli) Alert(text string) {
 	hText := h.helpText
-	h.SetHelp(text)
+	h.SetHelp(text + "   (Press any key to continue)")
 	h.root.GetChar()
 	h.SetHelp(hText)
 }
@@ -130,13 +130,20 @@ func (h *hncli) DelChar() {
 func (h *hncli) getFitLines() []string {
 	_, w := h.main.MaxYX()
 
-	a := strings.Split(h.content, "\n")
+	lineArray := strings.Split(h.content, "\n")
 
-	p := make([]string, 0, len(a))
+	p := make([]string, 0, len(lineArray))
 
-	//Newlines for stuff
-	for _, line := range a {
+	for _, line := range lineArray {
+
+		//Remember padding for each line
+		var pad string
+		for len(line) > len(COMMENT_PAD)+len(pad) && line[len(pad):len(pad)+len(COMMENT_PAD)] == COMMENT_PAD {
+			pad += COMMENT_PAD
+		}
+
 		for len(line) > w {
+
 			//Current line length
 			l := w
 			if l > len(line) {
@@ -148,9 +155,19 @@ func (h *hncli) getFitLines() []string {
 				l--
 			}
 
+			//Split lines
 			p = append(p, line[:l])
-
 			line = line[l:]
+
+			//Strip leading spaces
+			for len(line) > 0 && line[0] == ' ' {
+				line = line[1:]
+			}
+
+			//Pad line if need be
+			if len(line) > 0 {
+				line = pad + line
+			}
 		}
 
 		p = append(p, line)

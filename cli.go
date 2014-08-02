@@ -8,6 +8,12 @@ import (
 
 var input string = ""
 
+func storyTime() {
+	cli.SetContent(getStories(pageNum))
+	cli.SetKeyHandler(storyHandler)
+	cli.SetHelp("(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
+}
+
 func storyHandler(ch string) {
 	switch ch {
 	case "c":
@@ -22,9 +28,7 @@ func storyHandler(ch string) {
 
 			text := p.Articles[num-1].PrintComments()
 
-			cli.SetContent(text)
-			cli.SetHelp("(d/u scroll 30 lines; j/k: scroll 1 line; n/p scroll 1 page; q: quit to story view)")
-			cli.SetKeyHandler(commentHandler)
+			commentTime(text)
 			input = ""
 		} else {
 			cli.Alert("Please enter a number to select a comment")
@@ -51,6 +55,7 @@ func storyHandler(ch string) {
 		//Go forward 1 page
 		pageNum += 1
 		cli.SetContent(getStories(pageNum))
+		input = ""
 		break
 	case "p":
 		//Go back 1 page, unless page < 0
@@ -60,6 +65,7 @@ func storyHandler(ch string) {
 		cli.SetContent(getStories(pageNum))
 		break
 	case "enter":
+		cli.Refresh()
 		break
 	case "backspace":
 		if len(input) > 0 {
@@ -74,6 +80,12 @@ func storyHandler(ch string) {
 		break
 	}
 
+}
+func commentTime(text string) {
+	cli.SetContent(text)
+	cli.ResetScroll()
+	cli.SetHelp("(d/u scroll 30 lines; j/k: scroll 1 line; n/p scroll 1 page; q: quit to story view)")
+	cli.SetKeyHandler(commentHandler)
 }
 
 func commentHandler(input string) {
@@ -100,9 +112,7 @@ func commentHandler(input string) {
 		cli.Scroll(-cli.Height)
 		break
 	case "q":
-		cli.ResetScroll()
-		cli.SetContent(stories)
-		cli.SetKeyHandler(storyHandler)
+		storyTime()
 		break
 	}
 }
@@ -138,12 +148,7 @@ func runCli() {
 
 	p = NewPageCache()
 
-	stories = getStories(pageNum)
+	storyTime()
 
-	cli.SetContent(stories)
-	cli.SetKeyHandler(storyHandler)
-	cli.SetHelp("(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
-
-	cli.Refresh()
 	cli.Run()
 }
