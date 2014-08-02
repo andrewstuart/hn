@@ -23,6 +23,7 @@ func storyHandler(ch string) {
 			text := p.Articles[num-1].PrintComments()
 
 			cli.SetContent(text)
+			cli.SetKeyHandler(commentHandler)
 			input = ""
 		} else {
 			cli.Alert("Please enter a number to select a comment")
@@ -87,6 +88,9 @@ func commentHandler(input string) {
 	case "k":
 		cli.Scroll(-1)
 		break
+	case "g":
+		cli.ResetScroll()
+		break
 	case "n":
 		cli.Scroll(cli.Height)
 		break
@@ -97,7 +101,7 @@ func commentHandler(input string) {
 		cli.ResetScroll()
 		cli.SetContent(stories)
 		cli.SetKeyHandler(storyHandler)
-		return
+		break
 	}
 }
 

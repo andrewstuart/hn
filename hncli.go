@@ -9,7 +9,7 @@ import (
 
 type hncli struct {
 	root, main, help  *goncurses.Window
-	Height, pos       int
+	Height, offset    int
 	handler           CharHandler
 	finished          bool
 	helpText, content string
@@ -70,19 +70,20 @@ func (h *hncli) SetHelp(text string) {
 
 //Scroll the content that was added with SetContent
 func (h *hncli) Scroll(amount int) {
-	newPos := h.pos + amount
+	newOffset := h.offset + amount
 
-	if newPos < 0 {
-		h.pos = 0
+	if newOffset < 0 {
+		h.offset = 0
 	} else {
-		h.pos = newPos
+		h.offset = newOffset
 	}
 
-	h.SetContent(h.paginate())
+	h.drawPage()
 }
 
 func (h *hncli) ResetScroll() {
-	h.pos = 0
+	h.offset = 0
+	h.drawPage()
 }
 
 type CharHandler func(string)
@@ -146,7 +147,6 @@ func (h *hncli) getFitLines() []string {
 				l--
 			}
 
-			//Add substring to slice
 			p = append(p, line[:l])
 
 			line = line[l:]
@@ -158,24 +158,24 @@ func (h *hncli) getFitLines() []string {
 	return p
 }
 
-func (hc *hncli) paginate() string {
-	h, _ := hc.main.MaxYX()
-
-	lines := hc.getFitLines()
+func (h *hncli) drawPage() {
+	lines := h.getFitLines()
 
 	nLines := len(lines)
 
 	//If text won't fit
-	if nLines > h {
+	if nLines > h.Height {
 		//Determine start point
-		if hc.pos < nLines-h {
+		if h.offset < nLines-h.Height {
 			//If n is not in last h elements, reslice starting at n
-			lines = lines[hc.pos : hc.pos+h]
+			lines = lines[h.offset : h.offset+h.Height]
 		} else {
 			//Else, Get last h (at most) elements
-			lines = lines[nLines-h:]
+			lines = lines[nLines-h.Height:]
 		}
 	}
 
-	return strings.Join(lines, "\n")
+	h.main.Clear()
+	h.main.Print(strings.Join(lines, "\n"))
+	h.main.Refresh()
 }
