@@ -23,7 +23,7 @@ func storyHandler(ch string) {
 			text := p.Articles[num-1].PrintComments()
 
 			cli.SetContent(text)
-			scr.SetHelp("(d/u scroll 30 lines; j/k: scroll 1 line; n/p scroll 1 page; q: quit to story view)")
+			cli.SetHelp("(d/u scroll 30 lines; j/k: scroll 1 line; n/p scroll 1 page; q: quit to story view)")
 			cli.SetKeyHandler(commentHandler)
 			input = ""
 		} else {
