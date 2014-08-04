@@ -17,6 +17,8 @@ func storyTime() {
 	cli.SetHelp("(n: next, p: previous, <num>c: view comments, <num>o: open in browser, q: quit)  ")
 }
 
+var p *PageCache
+
 func storyHandler(ch string) {
 	switch ch {
 	case "c":
@@ -119,10 +121,6 @@ func commentHandler(input string) {
 		break
 	}
 }
-
-var p *PageCache
-
-var stories string
 
 func getStories(pageNum int) string {
 	h := cli.Height
