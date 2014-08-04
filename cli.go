@@ -8,6 +8,9 @@ import (
 
 var input string = ""
 
+var cli hncli
+var pageNum = 0
+
 func storyTime() {
 	cli.SetContent(getStories(pageNum))
 	cli.SetKeyHandler(storyHandler)
@@ -117,7 +120,6 @@ func commentHandler(input string) {
 	}
 }
 
-var cli hncli
 var p *PageCache
 
 var stories string
@@ -125,8 +127,8 @@ var stories string
 func getStories(pageNum int) string {
 	h := cli.Height
 
-	start = h * pageNum
-	end = start + h
+	start := h * pageNum
+	end := start + h
 
 	for end > len(p.Articles) {
 		p.GetNext()
@@ -140,10 +142,7 @@ func getStories(pageNum int) string {
 	return str
 }
 
-var pageNum, start, end int
-
 func runCli() {
-	pageNum = 0
 	cli = GetCli()
 
 	p = NewPageCache()
