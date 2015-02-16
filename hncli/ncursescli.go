@@ -1,56 +1,17 @@
 package hncli
 
 import (
-	"log"
+	"os"
 	"strings"
 
 	"code.google.com/p/goncurses"
 )
 
-type hncli struct {
-	root, main, help  *goncurses.Window
-	Height, offset    int
-	handler           CharHandler
-	finished          bool
-	helpText, content string
-}
+const MenuHeight int = 3
 
 func (h *hncli) Refresh() {
 	h.root.Refresh()
 	h.root.Move(h.Height-1, 0)
-}
-
-const MENU_HEIGHT int = 3
-
-var hc hncli
-
-//Ha.
-var singleDone = false
-
-//Returns an instance of the CLI. Call once
-func GetCli() hncli {
-	if !singleDone {
-		hc = hncli{}
-
-		root, e := goncurses.Init()
-
-		if e != nil {
-			goncurses.End()
-			log.Fatal(e)
-		}
-
-		h, w := root.MaxYX()
-
-		hc.root = root
-		hc.main = root.Sub(h-MENU_HEIGHT, w, 0, 0)
-		hc.help = root.Sub(MENU_HEIGHT, w, h-MENU_HEIGHT, 0)
-
-		hc.Height = h - MENU_HEIGHT
-
-		singleDone = true
-	}
-
-	return hc
 }
 
 func (h *hncli) SetContent(text string) {
@@ -82,24 +43,19 @@ func (h *hncli) Scroll(amount int) {
 	h.drawPage()
 }
 
-func (h *hncli) ResetScroll() {
+//Scroll back to beginning
+func (h *hncli) ScrollTop() {
 	h.offset = 0
 	h.drawPage()
 }
 
-type CharHandler func(string)
-
-func (h *hncli) SetKeyHandler(hand CharHandler) {
-	h.handler = hand
-}
-
 func (h *hncli) Quit() {
 	goncurses.End()
-	h.finished = true
+	os.Exit(0)
 }
 
 func (h *hncli) Run() {
-	for !h.finished {
+	for {
 		c := h.root.GetChar()
 
 		if c == 127 {
@@ -107,8 +63,7 @@ func (h *hncli) Run() {
 		}
 
 		ch := goncurses.KeyString(c)
-
-		h.handler(ch)
+		h.handler(ch, h)
 	}
 }
 
@@ -120,6 +75,7 @@ func (h *hncli) Alert(text string) {
 	h.SetHelp(hText)
 }
 
+//Delete a character
 func (h *hncli) DelChar() {
 	cy, cx := h.root.CursorYX()
 	h.root.MoveDelChar(cy, cx-3)

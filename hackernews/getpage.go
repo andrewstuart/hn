@@ -14,8 +14,14 @@ import (
 
 //Get a new page by passing a url
 func (c *Client) RetrievePage(url string) (*Page, error) {
+	//Trim leading slash if necessary
+	if url[0] == '/' {
+		url = url[1:]
+	}
+
 	//All urls must start with YC root (or test)
-	req, err := http.NewRequest("GET", c.RootUrl+url, nil)
+	urlForReq := fmt.Sprintf("%s/%s", c.RootUrl, url)
+	req, err := http.NewRequest("GET", urlForReq, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating request for url %s: %v", url, err)
 	}
@@ -23,7 +29,7 @@ func (c *Client) RetrievePage(url string) (*Page, error) {
 	doc, err := c.doReq(req)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error doing request: %v", err)
+		return nil, fmt.Errorf("Error doing request:\n\t %v", err)
 	}
 
 	//Get all the trs with subtext for children then go back one (for the first row)

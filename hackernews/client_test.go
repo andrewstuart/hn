@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const TEST_RESPONSE = `<html><head><meta name="referrer" content="origin"></meta><link rel="stylesheet" type="text/css" href="news.css?RhgQ45HmurMxjyZlSb9P"></link><link rel="shortcut icon" href="favicon.ico"></link><link rel="alternate" type="application/rss+xml" title="RSS" href="rss"></link><script type="text/javascript">
+const TestResponse = `<html><head><meta name="referrer" content="origin"></meta><link rel="stylesheet" type="text/css" href="news.css?RhgQ45HmurMxjyZlSb9P"></link><link rel="shortcut icon" href="favicon.ico"></link><link rel="alternate" type="application/rss+xml" title="RSS" href="rss"></link><script type="text/javascript">
 function byId(id) {
   return document.getElementById(id);
 }
@@ -51,7 +51,7 @@ func TestRetreivePage(t *testing.T) {
 				t.Error(err)
 			}
 
-			fmt.Fprintf(gw, TEST_RESPONSE)
+			fmt.Fprintf(gw, TestResponse)
 			break
 		}
 	}))
