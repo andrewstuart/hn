@@ -10,7 +10,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-const YC_ROOT = "https://news.ycombinator.com/"
+const YcRoot = "https://news.ycombinator.com/"
 
 //Client for interacting with news.ycombinator.com
 type Client struct {
