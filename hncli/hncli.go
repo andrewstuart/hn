@@ -1,4 +1,4 @@
-package main
+package hncli
 
 import (
 	"log"
@@ -127,6 +127,8 @@ func (h *hncli) DelChar() {
 	h.root.DelChar()
 }
 
+const CommentPadding = "  "
+
 func (h *hncli) getFitLines() []string {
 	_, w := h.main.MaxYX()
 
@@ -138,8 +140,8 @@ func (h *hncli) getFitLines() []string {
 
 		//Remember padding for each line
 		var pad string
-		for len(line) > len(COMMENT_PAD)+len(pad) && line[len(pad):len(pad)+len(COMMENT_PAD)] == COMMENT_PAD {
-			pad += COMMENT_PAD
+		for len(line) > len(CommentPadding)+len(pad) && line[len(pad):len(pad)+len(CommentPadding)] == CommentPadding {
+			pad += CommentPadding
 		}
 
 		for len(line) > w {

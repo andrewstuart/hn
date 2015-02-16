@@ -13,7 +13,7 @@ import (
 )
 
 //Get a new page by passing a url
-func (c *client) RetrievePage(url string) (*Page, error) {
+func (c *Client) RetrievePage(url string) (*Page, error) {
 	//All urls must start with YC root (or test)
 	req, err := http.NewRequest("GET", c.RootUrl+url, nil)
 	if err != nil {

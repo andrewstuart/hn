@@ -13,7 +13,7 @@ import (
 
 const HN_WIDTH_MULTIPLIER = 40
 
-func (c *client) GetComments(a *Article) error {
+func (c *Client) GetComments(a *Article) error {
 	if a.Comments == nil {
 		a.Comments = make([]*Comment, 0)
 	}

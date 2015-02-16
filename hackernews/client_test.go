@@ -58,7 +58,7 @@ func TestRetreivePage(t *testing.T) {
 
 	defer ts.Close()
 
-	c := newClient(ts.URL)
+	c := NewClient(ts.URL)
 
 	p, err := c.RetrievePage("/")
 

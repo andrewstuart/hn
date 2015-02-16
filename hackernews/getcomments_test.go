@@ -24,7 +24,7 @@ func TestGetComments(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	c := newClient(ts.URL)
+	c := NewClient(ts.URL)
 
 	a := &Article{
 		Id:       9050970,

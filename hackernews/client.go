@@ -13,13 +13,13 @@ import (
 const YC_ROOT = "https://news.ycombinator.com/"
 
 //Client for interacting with news.ycombinator.com
-type client struct {
+type Client struct {
 	RootUrl, cfduid string
 	http.Client
 }
 
-func newClient(rootUrl string) *client {
-	c := &client{
+func NewClient(rootUrl string) *Client {
+	c := &Client{
 		RootUrl: rootUrl,
 		Client: http.Client{
 			Transport: &http.Transport{
@@ -43,7 +43,7 @@ func newClient(rootUrl string) *client {
 }
 
 //Do a request
-func (c *client) doReq(req *http.Request) (*goquery.Document, error) {
+func (c *Client) doReq(req *http.Request) (*goquery.Document, error) {
 	req.Header.Set("cookie", c.cfduid)
 	req.Header.Set("referrer", "https://news.ycombinator.com/news")
 	req.Header.Set("user-agent", "CLI Scraper (github.com/andrewstuart/hn)")

@@ -2,7 +2,6 @@ package hackernews
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -15,15 +14,10 @@ type Comment struct {
 	Comments []*Comment `json:"comments,omitempty"`
 }
 
-//Stringer implementation for sensible logging
-func (c *Comment) String() string {
-	return strings.Replace(fmt.Sprintf("%s: %s", c.User, c.Text), "\n", " ", -1)
-}
-
 //HackerNews article structure
 type Article struct {
 	Rank        int        `json:"rank"`
-	Title       string     `json:"title"xml:"`
+	Title       string     `json:"title"`
 	Karma       int        `json:"karma"`
 	Id          int        `json:"id"`
 	Url         string     `json:"url"`
@@ -48,4 +42,21 @@ func NewPage(url string) *Page {
 		Url:      url,
 		Articles: make([]*Article, 0, 15),
 	}
+}
+
+type HnError struct {
+	Message string
+	Code    HnErrorCode
+}
+
+type HnErrorCode int
+
+const (
+	TransportError = HnErrorCode(iota)
+	SiteError
+	CloudFlareError
+)
+
+func (e HnError) Error() string {
+	return fmt.Sprintf("Error code %d: %s", e.Code, e.Message)
 }

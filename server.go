@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/andrewstuart/hn/hackernews"
 )
 
 const commentRoute string = "/comments/"
 
-var articles map[string]*Article
+var articles map[string]*hackernews.Article
 
 func getComments(w http.ResponseWriter, r *http.Request) {
 	w.Header()["Access-Control-Allow-Origin"] = []string{"*"}
