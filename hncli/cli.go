@@ -1,29 +1,21 @@
 package hncli
 
 import (
-	"fmt"
-	"io"
+	"log"
 
 	"github.com/andrewstuart/hn/hackernews"
-
-	"code.google.com/p/goncurses"
+	"github.com/andrewstuart/hn/hncli/shell"
 )
 
-type Cli struct {
-	CurrentPage int
-	Writer      io.Writer
-	Screen      goncurses.Screen
-	Cache       hackernews.PageCache
-}
+var pc *hackernews.PageCache
+var cli *shell.Cli
 
-func (c *Cli) SetContent(content string) error {
-	if c.Writer != nil {
-		_, err := fmt.Fprint(c.Writer, content)
+func Run() {
+	pc = hackernews.NewPageCache()
+	cli, err := shell.NewCli(nil)
 
-		if err != nil {
-			return fmt.Errorf("Error writing to output: %v", err)
-		}
+	if err != nil {
+		cli.Quit()
+		log.Fatal(err)
 	}
-
-	return nil
 }
