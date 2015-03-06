@@ -51,7 +51,7 @@ func TestRetreivePage(t *testing.T) {
 				t.Error(err)
 			}
 
-			fmt.Fprintf(gw, TestResponse)
+			fmt.Fprintf(gw, "%s", TestResponse)
 			break
 		}
 	}))

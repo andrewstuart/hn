@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-//Comments structure for HN articles
+//A Comment is a structure for storing data about each HN comment as well as nested
+//children
 type Comment struct {
 	Text     string     `json:"text"`
 	User     string     `json:"user"`
@@ -22,10 +23,10 @@ type Article struct {
 	Id          int        `json:"id"`
 	Url         string     `json:"url"`
 	NumComments int        `json:"numComments"`
-	Comments    []*Comment `json:"comments",omitempty`
+	Comments    []*Comment `json:"comments,omitempty"`
 	User        string     `json:"user"`
 	CreatedAgo  string     `json:"createdAgo,omitempty"`
-	Created     time.Time  `json:"created",omitempty`
+	Created     time.Time  `json:"created,omitempty"`
 }
 
 //A single page for keeping track of where articles originate and where we should
