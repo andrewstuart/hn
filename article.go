@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"code.google.com/p/goncurses"
+	"github.com/tncardoso/gocurses"
+	//"code.google.com/p/goncurses"
 	"github.com/PuerkitoBio/goquery"
 )
 
