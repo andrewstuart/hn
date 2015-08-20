@@ -3,9 +3,8 @@ package main
 import (
 	"log"
 	"strings"
+
 	"github.com/rthornton128/goncurses"
-	//"github.com/tncardoso/gocurses"
-	//"code.google.com/p/goncurses"
 )
 
 type hncli struct {
