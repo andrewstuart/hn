@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"code.google.com/p/goncurses"
+	"github.com/rthornton128/goncurses"
 )
 
 type hncli struct {
