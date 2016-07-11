@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rthornton128/goncurses"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/rthornton128/goncurses"
 )
 
 const YC_ROOT = "https://news.ycombinator.com/"
@@ -292,11 +292,11 @@ func NewPage(url string) *Page {
 
 		row = row.Next()
 
-		row.Find("span").Each(func(i int, s *goquery.Selection) {
+		row.Find("span.score").Each(func(i int, s *goquery.Selection) {
 			if karma, err := strconv.Atoi(strings.Split(s.Text(), " ")[0]); err == nil {
 				ar.Karma = karma
 			} else {
-				log.Println(err)
+				log.Println("Error getting karma count:", err)
 			}
 
 			if idSt, exists := s.Attr("id"); exists {
