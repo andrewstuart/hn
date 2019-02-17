@@ -110,7 +110,7 @@ func parseCreated(s string) time.Time {
 	}
 }
 
-//Retreives comments for a given article
+// GetComments: Retreives comments for a given article
 func (a *Article) GetComments() {
 	if _, exists := arsCache[a.Id]; exists {
 		return
@@ -233,7 +233,7 @@ type Page struct {
 	Articles []*Article `json:"articles"`
 }
 
-//Get a new page by passing a url
+// NewPage gets a new page by passing a url
 func NewPage(url string) *Page {
 	p := Page{
 		Url:      url,

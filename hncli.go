@@ -27,7 +27,7 @@ var hc hncli
 //Ha.
 var singleDone = false
 
-//Returns an instance of the CLI. Call once
+// GetCli returns an instance of the CLI. Call once
 func GetCli() hncli {
 	if !singleDone {
 		hc = hncli{}
@@ -112,7 +112,7 @@ func (h *hncli) Run() {
 	}
 }
 
-//Show an alert, wait for a character, then reset
+// Alert: Show an alert, wait for a character, then reset
 func (h *hncli) Alert(text string) {
 	hText := h.helpText
 	h.SetHelp(text + "   (Press any key to continue)")
