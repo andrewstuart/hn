@@ -244,14 +244,14 @@ func NewPage(url string) *Page {
 
 	head, _ := http.NewRequest("HEAD", url, nil)
 
-	if resp, err := client.Do(head); err == nil {
+	if resp, err := client.Do(head); err == nil && len(resp.Cookies()) > 0 {
 		c := resp.Cookies()
 		cfduid = c[0].Raw
-	} else {
+	} /*else {
 		goncurses.End()
 		log.Println(resp)
 		log.Println(err)
-	}
+	}*/
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
